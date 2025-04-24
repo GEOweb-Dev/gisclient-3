@@ -152,7 +152,7 @@ if($_REQUEST["REQUEST"] == "SaveLayer"){
         $customFieldsDecl = str_replace('=', ' ', http_build_query($redlineFields, '', ', '));
         $customFieldsVal = ':' . implode(', :', array_keys($redlineFields));
 
-	$sql = "CREATE TABLE ".REDLINE_SCHEMA.".".REDLINE_TABLE." (id serial, project varchar, mapset varchar, username varchar, redline_id varchar, redline_title varchar, redline_status varchar, date timestamp, " . $customFieldsDecl . " , CONSTRAINT annotazioni_pkey PRIMARY KEY (id));";
+	$sql = "CREATE TABLE ".REDLINE_SCHEMA.".".REDLINE_TABLE." (id serial, project varchar, mapset varchar, username varchar, redline_id varchar, redline_title varchar, redline_status numeric, date timestamp, " . $customFieldsDecl . " , CONSTRAINT annotazioni_pkey PRIMARY KEY (id));";
 	try {
 		$db->exec($sql);
 		foreach($geomTypes as $type) {
@@ -167,6 +167,7 @@ if($_REQUEST["REQUEST"] == "SaveLayer"){
         else
             $redlineId = array_sum( explode( ' ' , microtime() ) );
 	$redlineTitle = !empty($_REQUEST['TITLE']) ? $_REQUEST['TITLE'] : null;
+	$redlineStatus = !empty($_REQUEST['STATUS']) ? $_REQUEST['STATUS'] : 0;
 
         $inserted = false;
         $insertedIdList = array();
@@ -182,24 +183,26 @@ if($_REQUEST["REQUEST"] == "SaveLayer"){
                 $rowId = !empty($feature['properties']['id']) ? $feature['properties']['id'] : null;
 
                 if ($rowId == null) {
-                    $sql = "insert into ".REDLINE_SCHEMA.".".REDLINE_TABLE." (project, mapset, username, redline_id, redline_title, redline_status, date, " . $customFields . ") values (:project, :mapset, :username, :redline_id, :redline_title, 'Nuova', now(), " . $customFieldsVal . ")";
+                    $sql = "insert into ".REDLINE_SCHEMA.".".REDLINE_TABLE." (project, mapset, username, redline_id, redline_title, redline_status, date, " . $customFields . ") values (:project, :mapset, :username, :redline_id, :redline_title, :redline_status, now(), " . $customFieldsVal . ")";
                     $stmt = $db->prepare($sql);
                     $params = array(
                             ':project'=>$_REQUEST['PROJECT'],
                             ':mapset'=>$_REQUEST['MAPSET'],
                             ':username'=>$redlineUser,
                             ':redline_id'=>$redlineId,
-                            ':redline_title'=>$redlineTitle
+                            ':redline_title'=>$redlineTitle,
+							':redline_status'=>$redlineStatus
                     );
                     foreach ($redlineFields as $key => $value) {
                         $params[':'.$key] = !empty($feature['properties'][$key]) ? $feature['properties'][$key] : null;
                     }
                 }
                 else {
-                    $sql = "update ".REDLINE_SCHEMA.".".REDLINE_TABLE." SET (redline_title, date, " . $customFields . ") = (:redline_title, now(), " . $customFieldsVal . ") where id=:id";
+                    $sql = "update ".REDLINE_SCHEMA.".".REDLINE_TABLE." SET (redline_title, redline_status, date, " . $customFields . ") = (:redline_title, :redline_status, now(), " . $customFieldsVal . ") where id=:id";
                     $stmt = $db->prepare($sql);
                     $params = array(
                         ':redline_title' => $redlineTitle,
+						':redline_status'=>$redlineStatus,
                         ':id' => $rowId
                     );
                     foreach ($redlineFields as $key => $value) {
@@ -242,7 +245,7 @@ if($_REQUEST["REQUEST"] == "SaveLayer"){
         }
 
     if($inserted) {
-        die(json_encode(array('redlineId'=>"$redlineId", 'redlineTitle'=>$redlineTitle)));
+        die(json_encode(array('redlineId'=>"$redlineId", 'redlineTitle'=>$redlineTitle, 'redlineStatus'=>$redlineStatus)));
     } else {
         outputError('Invalid format');
     }
