@@ -43,10 +43,10 @@ if ($_REQUEST["REQUEST"] == "PrintMap") {
 
 $db = GCApp::getDB();
 $user = new GCUser();
-$redlineUser = $user->isAuthenticated() ? $user->getUsername() : 'GUEST';
+$redlineUser = $user->isAuthenticated() ? strtolower($user->getUsername()) : 'GUEST';
 
 if ($_REQUEST["REQUEST"] == "GetUser") {
-	$sql = "CREATE TABLE ".REDLINE_SCHEMA.".".REDLINE_TABLE."_users (id serial, username varchar unique, config text, CONSTRAINT ".REDLINE_TABLE."_users_pkey PRIMARY KEY (id));";
+	$sql = "CREATE TABLE IF NOT EXISTS ".REDLINE_SCHEMA.".".REDLINE_TABLE."_users (id serial, username varchar unique, config text, CONSTRAINT ".REDLINE_TABLE."_users_pkey PRIMARY KEY (id));";
 	try {
 		$db->exec($sql);
 
@@ -152,7 +152,7 @@ if($_REQUEST["REQUEST"] == "SaveLayer"){
         $customFieldsDecl = str_replace('=', ' ', http_build_query($redlineFields, '', ', '));
         $customFieldsVal = ':' . implode(', :', array_keys($redlineFields));
 
-	$sql = "CREATE TABLE ".REDLINE_SCHEMA.".".REDLINE_TABLE." (id serial, project varchar, mapset varchar, username varchar, redline_id varchar, redline_title varchar, redline_status numeric, date timestamp, " . $customFieldsDecl . " , CONSTRAINT annotazioni_pkey PRIMARY KEY (id));";
+	$sql = "CREATE TABLE IF NOT EXISTS ".REDLINE_SCHEMA.".".REDLINE_TABLE." (id serial, project varchar, mapset varchar, username varchar, redline_id varchar, redline_title varchar, redline_status numeric, date timestamp, " . $customFieldsDecl . " , CONSTRAINT annotazioni_pkey PRIMARY KEY (id));";
 	try {
 		$db->exec($sql);
 		foreach($geomTypes as $type) {
