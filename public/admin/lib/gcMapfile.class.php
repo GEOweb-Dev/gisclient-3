@@ -82,7 +82,7 @@ class gcMapfile{
         if($keytype=="mapset") {    //GENERO IL MAPFILE PER IL MAPSET
                 $filter="mapset.mapset_name=:keyvalue";
                 $joinMapset="INNER JOIN ".DB_SCHEMA.".mapset using (project_name) INNER JOIN ".DB_SCHEMA.".mapset_layergroup using (mapset_name,layergroup_id)";
-                $fieldsMapset="mapset_layergroup.status as layergroup_status, mapset_name,mapset_title,mapset_extent,mapset_srid,mapset.maxscale as mapset_maxscale,mapset_def,mapset.metadata,";
+                $fieldsMapset="mapset_layergroup.status as layergroup_status, mapset_name,mapset_title,mapset_extent,mapset_srid,mapset.maxscale as mapset_maxscale,mapset_def,mapset.metadata,force_symbols,";
                 $sqlParams['keyvalue'] = $keyvalue;
 
                 $sql = 'select project_name from '.DB_SCHEMA.'.mapset where mapset_name=:mapset';
@@ -97,7 +97,7 @@ class gcMapfile{
                 $fieldsMapset = '1 as layergroup_status, project_name as mapset_name, project_title as mapset_title, project_srid as mapset_srid, null as mapset_extent,null as metadata,';
             } else {
                 $joinMapset="INNER JOIN ".DB_SCHEMA.".mapset using (project_name) INNER JOIN ".DB_SCHEMA.".mapset_layergroup using (mapset_name,layergroup_id)";
-                $fieldsMapset="mapset_layergroup.status as layergroup_status, mapset_name,mapset_title,mapset_extent,mapset_srid,mapset.maxscale as mapset_maxscale,mapset_def,mapset.metadata,";
+                $fieldsMapset="mapset_layergroup.status as layergroup_status, mapset_name,mapset_title,mapset_extent,mapset_srid,mapset.maxscale as mapset_maxscale,mapset_def,mapset.metadata,force_symbols,";
             }
             $sqlParams['keyvalue'] = $keyvalue;
             $projectName = $keyvalue;
@@ -105,12 +105,12 @@ class gcMapfile{
         } elseif($keytype=="layergroup") { //GENERO IL MAPFILE PER IL LAYERGROUP NEL SISTEMA DI RIF DEL PROGETTO (PREVIEW)
                 $filter="layergroup.layergroup_id=:keyvalue";
                 $joinMapset="";
-                $fieldsMapset="1 as layergroup_status, layergroup_name as mapset_name,layergroup_title as mapset_title,project.max_extent_scale as mapset_maxscale,layer.data_srid as mapset_srid,layer.data_extent as mapset_extent,null as metadata,";
+                $fieldsMapset="1 as layergroup_status, layergroup_name as mapset_name,layergroup_title as mapset_title,project.max_extent_scale as mapset_maxscale,layer.data_srid as mapset_srid,layer.data_extent as mapset_extent,null as metadata,0 as force_symbols,";
                 $sqlParams['keyvalue'] = $keyvalue;
         } else if($keytype=="layer") {  //GENERO IL MAPFILE PER IL LAYER NEL SISTEMA DI RIF DEL PROGETTO (PREVIEW)
           $filter="layer.layer_id=:keyvalue";
           $joinMapset="";
-          $fieldsMapset="1 as layergroup_status, layer_name as mapset_name,layer_title as mapset_title,project.max_extent_scale as mapset_maxscale,layer.data_srid as mapset_srid,layer.data_extent as mapset_extent,null as metadata,";
+          $fieldsMapset="1 as layergroup_status, layer_name as mapset_name,layer_title as mapset_title,project.max_extent_scale as mapset_maxscale,layer.data_srid as mapset_srid,layer.data_extent as mapset_extent,null as metadata,0 as force_symbols,";
           $sqlParams['keyvalue'] = $keyvalue;
         } elseif($keytype="print"){ //GENERO UN MAPFILE PER LA STAMPA
                 $_in = GCApp::prepareInStatement($keyvalue);
@@ -167,6 +167,7 @@ class gcMapfile{
         $mapSrid=array();
         $mapExtent=array();
         $symbolsList=array();
+        $mapForceSymbols=array();
         $oFeature = new gcFeature($this->i18n);
 
         //mapproxy
@@ -189,7 +190,7 @@ class gcMapfile{
             $mapExtent[$mapName] = $aLayer["mapset_extent"];
             $mapMetadata[$mapName] = $aLayer["metadata"];
             $mapMaxScale[$mapName] = floatval($aLayer["mapset_maxscale"])?min(floatval($aLayer["mapset_maxscale"]), $projectMaxScale):$projectMaxScale;
-
+            $mapForceSymbols[$mapName] = $aLayer["force_symbols"];
             $mapExtents = $this->_setMapExtents($mapName);
 
             $oFeature->initFeature($aLayer["layer_id"]);
@@ -203,7 +204,12 @@ class gcMapfile{
             if ($aLayer['set_extent'] === 1 && empty($oFeatureData['data_extent'])) {
                 // use mapset extent if layer extent is not set
                 // the layer extent is important to make wms layers work in some desktop gis clients
-                $oFeatureData['data_extent'] = $mapExtents[$oFeatureData['data_srid']];
+        		if (empty($mapExtents[$oFeatureData['data_srid']]) && !empty($oFeatureData['data_srid'])) {
+        		    $oFeatureData['data_extent']  = implode(" ", $this->_calculateExtentFromCenter($mapMaxScale[$mapName], $oFeatureData['data_srid']));
+        		}
+        		else {
+                    $oFeatureData['data_extent'] = $mapExtents[$oFeatureData['data_srid']];
+        		}
                 //$oFeatureData['data_extent'] = $aLayer["mapset_extent"];
                 $oFeature->setFeatureData($oFeatureData);
             }
@@ -363,7 +369,7 @@ class gcMapfile{
                 $this->mapsetExtent = $v;
             }
 
-            if($symbolsList[$mapName]) $this->layerText .= $this->_getSymbolText($symbolsList[$mapName]);
+            if($symbolsList[$mapName] || $mapForceSymbols[$mapName]) $this->layerText .= $this->_getSymbolText($symbolsList[$mapName], $mapForceSymbols[$mapName]);
             $this->_writeFile($mapName);
 
             //NON GENERO I FILE YAML TEMPORANEI PER MAPPROXY
@@ -757,17 +763,18 @@ END";
     }
 
 
-    function _getSymbolText($aSymbols){
-                $_in = GCApp::prepareInStatement($aSymbols);
-                $sqlParams = $_in['parameters'];
-                $inQuery = $_in['inQuery'];
+    function _getSymbolText($aSymbols, $force_all){
+        $sql="select * from ".DB_SCHEMA.".symbol";
+        if (!$force_all) {
+            $_in = GCApp::prepareInStatement($aSymbols);
+            $sqlParams = $_in['parameters'];
+            $inQuery = $_in['inQuery'];
+            $sql.=" where symbol_name in (".$inQuery.");";
+        }
 
-                $sql="select * from ".DB_SCHEMA.".symbol
-                    where symbol_name in (".$inQuery.");";
-
-                $stmt = $this->db->prepare($sql);
-                $stmt->execute($sqlParams);
-                $res = $stmt->fetchAll();
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($sqlParams);
+        $res = $stmt->fetchAll();
 
         $smbText=array();
         for($i=0;$i<count($res);$i++){
