@@ -279,9 +279,9 @@ class gcFeature {
         if (!empty($this->aFeature["template"]))
             $layText[] = "TEMPLATE \"" . $this->aFeature["template"] . "\"";
         if (!empty($this->aFeature["header"]))
-            $layText[] = "HEADER \"" . $this->aFeature["header"] . "\"";;
+            $layText[] = "HEADER \"" . $this->aFeature["header"] . "\"";
         if (!empty($this->aFeature["footer"]))
-            $layText[] = "FOOTER \"" . $this->aFeature["footer"] . "\"";;
+            $layText[] = "FOOTER \"" . $this->aFeature["footer"] . "\"";
         if (!empty($this->aFeature["opacity"])) {
             // **** Old Snapo - Mapserver 7 compatibility
             // **** OPACITY directive deperecated, use COMPOSITE block instead
@@ -384,7 +384,7 @@ class gcFeature {
                         }
                     }
                     $layText[] = "PROCESSING \"CLOSE_CONNECTION=DEFER\"";
-                    if ($this->aFeature["queryable"] == 1)
+                    if ($this->aFeature["queryable"] == 1 && $this->msVersion < 8)
                         $layText[] = "DUMP TRUE";
                     break;
 
@@ -406,7 +406,7 @@ class gcFeature {
                     if (!empty($this->aFeature["data_filter"]))
                         $layText[] = "FILTER \"" . $this->aFeature["data_filter"] . "\"";
                     $layText[] = "PROCESSING \"CLOSE_CONNECTION=DEFER\"";
-                    if ($this->aFeature["queryable"] == 1)
+                    if ($this->aFeature["queryable"] == 1 && $this->msVersion < 8)
                         $layText[] = "DUMP TRUE";
                     break;
 
@@ -417,7 +417,7 @@ class gcFeature {
                     $layText[] = "CONNECTIONTYPE OGR";
                     $layText[] = "CONNECTION \"" . $this->aFeature["catalog_path"] . "\"";
                     $layText[] = "DATA \"" . $this->aFeature["data"] . "\"";
-                    if ($this->aFeature["queryable"] == 1)
+                    if ($this->aFeature["queryable"] == 1 && $this->msVersion < 8)
                         $layText[] = "DUMP TRUE";
                     break;
                 case MS_GRATICULE:
@@ -611,6 +611,9 @@ class gcFeature {
                 if (!empty($includeItems)) {
                     $aMeta['ows_include_items'] = implode(',', $includeItems);
                     $aMeta['gml_include_items'] = implode(',', $includeItems);
+        		    if (!empty($this->aFeature["template"])) {
+                            	$aMeta['wms_include_items'] = implode(',', $includeItems);
+        		    }
                 }
             } else {
                 $aMeta["ows_include_items"] = "all";
@@ -619,6 +622,17 @@ class gcFeature {
                 $aMeta["ows_exclude_items"] = $this->aFeature["data_geom"];
                 $aMeta["gml_exclude_items"] = $this->aFeature["data_geom"];
                 $aMeta["gml_featureid"] = $this->aFeature["data_unique"];
+            }
+            if (!empty($this->aFeature["template"])) {
+                if (!empty($this->aFeature["header"]) && !empty($this->aFeature["footer"])) {
+                    $aMeta["wms_getfeatureinfo_formatlist"] = "text/plain,text/html,application/vnd.ogc.gml,gml";
+                }
+                else {
+                    $aMeta["wms_getfeatureinfo_formatlist"] = "text/plain,application/vnd.ogc.gml,gml";
+                }
+            }
+            else {
+                    $aMeta["wms_enable_request"] = "* !GetFeatureInfo";
             }
             if (strpos($this->aFeature['metadata'], "gml_" . $this->aFeature["data_geom"] . "_type") === false) {
                 if (array_key_exists($this->aFeature["data_type"], $ageometryType))
@@ -765,7 +779,7 @@ class gcFeature {
             $styText[] = "COLOR " . $aStyle["color"];
         if (!empty($aStyle["symbol_name"]))
             $styText[] = "SYMBOL \"" . $aStyle["symbol_name"] . "\"";
-        if (!empty($aStyle["bgcolor"]))
+        if (!empty($aStyle["bgcolor"]) && $this->msVersion < 8)
             $styText[] = "BACKGROUNDCOLOR " . $aStyle["bgcolor"];
         if (!empty($aStyle["outlinecolor"]))
             $styText[] = "OUTLINECOLOR " . $aStyle["outlinecolor"];

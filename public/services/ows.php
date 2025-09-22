@@ -228,7 +228,7 @@ if(!empty($_REQUEST['GCFILTERS'])){
 }
 
 $cacheExpireTimeout = isset($_SESSION['GC_SESSION_CACHE_EXPIRE_TIMEOUT']) ? $_SESSION['GC_SESSION_CACHE_EXPIRE_TIMEOUT'] : null;
-if(!isset($_SESSION['GISCLIENT_USER_LAYER']) && !empty($layersParameter) && empty($_REQUEST['GISCLIENT_MAP'])) {
+if(!isset($_SESSION['GISCLIENT_USER_LAYER']['GISCLIENT_USER_FILTERS']['mapset_name'][$objRequest->getValueByName('map')]) && !empty($layersParameter) && empty($_REQUEST['GISCLIENT_MAP'])) {
 	$hasPrivateLayers = false;
 	$layersArray = array();
 	if(!empty($layersParameter)) {
@@ -246,7 +246,7 @@ if(!isset($_SESSION['GISCLIENT_USER_LAYER']) && !empty($layersParameter) && empt
 	if ($hasPrivateLayers) {
 		$user = new GCUser();
 		$isAuthenticated = $user->isAuthenticated();
-		if (empty($_SESSION['GISCLIENT_USER_LAYER'])) {
+		if (!isset($_SESSION['GISCLIENT_USER_LAYER']['GISCLIENT_USER_FILTERS']['mapset_name'][$objRequest->getValueByName('map')])) {
 				$user->setAuthorizedLayers(array('mapset_name' => $objRequest->getValueByName('map')));
 		}
 		// user does not have an open session, try to log in
@@ -295,7 +295,19 @@ if(!empty($layersParameter) || !empty($layerIndexList)) {
 				array_push($layersToRemove, $layer->name); // al quale l'utente non ha accesso
 				continue;
 			}
+			// **** Remove unauthorized fields
+			// **** TODO: also for WMS GetFeatureInfo requests
+			if (strtolower($objRequest->getValueByName('service')) == 'wfs') {
+				if (!isset($user)) {
+					$user = new GCUser();
+				}
+				$allowedFields = $user->getAuthorizedFields($objRequest->getvaluebyname('project'), $objRequest->getvaluebyname('map'), $layer->name);
+				$allowedFieldsStr = implode(',',$allowedFields);
+				$layer->setMetaData('ows_include_items', $allowedFieldsStr);
+				$layer->setMetaData('gml_include_items', $allowedFieldsStr);
+			}
 		}
+
 		$n = 0;
 		// se ci sono filtri definiti per il layer, li ciclo
 		while($authFilter = $layer->getMetaData('gc_authfilter_'.$n)) {
@@ -407,11 +419,11 @@ if (substr($sapi_type, 0, 3) != 'cgi') {
 ms_ioinstallstdouttobuffer();
 
 /* Execute request */
-$oMap->owsdispatch($objRequest);
+@$oMap->owsdispatch($objRequest);
 $contenttype = ms_iostripstdoutbuffercontenttype();
 
 /* Send response with appropriate header */
-if (substr($contenttype, 0, 6) == 'image/') {
+if (!empty($contenttype) && substr($contenttype, 0, 6) == 'image/') {
 
 	header('Content-Type: '. $contenttype);
 
