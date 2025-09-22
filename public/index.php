@@ -23,12 +23,12 @@ if(!empty($_POST['username']) && !empty($_POST['password'])) {
 }
 $db = GCApp::getDB();
 $dbSchema=DB_SCHEMA;
-$sql="SELECT distinct mapset_name,mapset_title,mapset_extent,project_name,template,project_title,private FROM $dbSchema.mapset INNER JOIN $dbSchema.project using(project_name) order by mapset_title,mapset_name;";
+$sql="SELECT distinct mapset_name,mapset_title,mapset_extent,project_name,template,project_title,private,hidden FROM $dbSchema.mapset INNER JOIN $dbSchema.project using(project_name) order by mapset_title,mapset_name;";
 $res = $db->query ($sql);
 
 $mapset=array();
 while($row = $res->fetch()){
-    if ($user->isAuthorized(array('mapset_name' =>$row["mapset_name"]))) {
+    if ($user->isAuthorized(array('mapset_name' =>$row["mapset_name"])) && !$row["hidden"]) {
         $mapset[$row["project_name"]][]=Array("name"=>$row["mapset_name"],
     		"title"=>$row["mapset_title"],"template"=>$row["template"],
     		"extent"=>$row["mapset_extent"],'private'=>$row['private'],

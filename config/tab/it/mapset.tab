@@ -24,6 +24,7 @@ dato[] = "Reference fissa;static_reference;;noyes|Tiles;mapset_tiles;120#seldb_m
 dato[] = "Definizioni aggiuntive<br><font size=1><a href= "http://mapserver.org/mapfile/map.html" target=blank>Documentazione MapServer MAP</a></font>;mapset_def;48x6;textarea"
 dato[] = "Metadata;metadata;48x6;textarea"
 dato[] = "Forza generazione di tutti i simboli;force_symbols;;noyes"
+dato[] = "Nascondi mappa nell'elenco mappe;hidden;;noyes"
 dato[] = "Salva;azione;;submit;all;salva|Annulla;azione;;submit;all;annulla|Elimina;azione;;submit;edit;elimina"
 
 [list]
