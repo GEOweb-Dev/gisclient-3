@@ -319,6 +319,55 @@ abstract class AbstractUser {
 		return $this->mapLayers;
 	}
 
+    public function getAuthorizedFields($projectName, $mapsetName, $featureType) {
+        $resFields = array();
+
+        if (empty($projectName) || empty($mapsetName) || empty($featureType)) {
+            return $resFields;
+        }
+
+        $db = GCApp::getDB();
+
+        $userGroupFilter = '';
+        if(!$this->isAdmin($projectName)) {
+            $authorizedGroups = $this->getGroups();
+            $userGroup = '';
+            if(!empty($authorizedGroups)) $userGroup =  " OR groupname in('".implode("','", $authorizedGroups)."')";
+            $userGroupFilter = ' (groupname IS NULL '.$userGroup.') AND ';
+        }
+
+        $sql = "SELECT DISTINCT field_name
+				FROM " . DB_SCHEMA . ".layergroup
+				INNER JOIN " . DB_SCHEMA . ".mapset_layergroup using (layergroup_id)
+				INNER JOIN " . DB_SCHEMA . ".layer using (layergroup_id)
+				INNER JOIN " . DB_SCHEMA . ".catalog using (catalog_id)
+				LEFT JOIN " . DB_SCHEMA . ".field using(layer_id)
+				LEFT JOIN " . DB_SCHEMA . ".relation using(relation_id)
+				LEFT JOIN " . DB_SCHEMA . ".field_groups using(field_id)
+                WHERE $userGroupFilter layer.queryable = 1 AND field.resultype_id <> 5
+                AND catalog.project_name=:project_name
+                AND mapset_layergroup.mapset_name=:mapset_name
+                AND layergroup.layergroup_name=:layergroup_name
+                AND layer.layer_name=:layer_name";
+
+        $featureTypeArr = explode('.', $featureType);
+        $sqlValues = array(':project_name'=>$projectName,
+            ':mapset_name'=>$mapsetName,
+            ':layergroup_name'=>$featureTypeArr[0],
+            ':layer_name'=>$featureTypeArr[1]
+        );
+
+        $stmt = $db->prepare($sql);
+        $stmt->execute($sqlValues);
+
+        while($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+
+            array_push($resFields, $row['field_name']);
+        }
+
+        return $resFields;
+    }
+
     public function authGCService(array $filter, $strict = false) {
         $isAuthenticated = !empty($this->username);
 		// user does not have an open session, try to log in
