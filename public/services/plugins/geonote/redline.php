@@ -41,7 +41,21 @@ if ($_REQUEST["REQUEST"] == "PrintMap") {
 
 }
 
-$db = GCApp::getDB();
+if (defined('REDLINE_DB')) {
+	if(!defined('REDLINE_PORT')) define('REDLINE_PORT', '5432');
+	$connStr = 'user=' . REDLINE_USER .
+			' password=' . REDLINE_PWD .
+			' dbname=' . REDLINE_DB .
+			' host=' . REDLINE_HOST .
+			' port=' . REDLINE_PORT .
+			'/' . REDLINE_SCHEMA;
+	$dataDB = new GCDataDB($connStr);
+	$db = $dataDB->db;
+}
+else {
+	$db = GCApp::getDB();
+}
+
 $user = new GCUser();
 $redlineUser = $user->isAuthenticated() ? strtolower($user->getUsername()) : 'GUEST';
 
@@ -156,7 +170,20 @@ if($_REQUEST["REQUEST"] == "SaveLayer"){
 	try {
 		$db->exec($sql);
 		foreach($geomTypes as $type) {
-			$db->exec("select addgeometrycolumn('".REDLINE_SCHEMA."', '".REDLINE_TABLE."', '".$type['db_field']."', ".REDLINE_SRID.", '".$type['db_type']."', 2)");
+			$db->exec("DO $$
+						BEGIN
+    						IF NOT EXISTS (
+        						SELECT 1
+        						FROM information_schema.columns
+        						WHERE table_name = '" . REDLINE_TABLE . "'
+								AND table_schema = '" . REDLINE_SCHEMA . "'
+          						AND column_name = '" . $type['db_field'] . "'
+    						) THEN
+        						PERFORM addgeometrycolumn('".REDLINE_SCHEMA."', '".REDLINE_TABLE."', '".$type['db_field']."', ".REDLINE_SRID.", '".$type['db_type']."', 2);
+    						END IF;
+						END $$;
+					");
+			//$db->exec("select addgeometrycolumn('".REDLINE_SCHEMA."', '".REDLINE_TABLE."', '".$type['db_field']."', ".REDLINE_SRID.", '".$type['db_type']."', 2)");
 		}
 	} catch(Exception $e) { //table already exists
 	}

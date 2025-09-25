@@ -40,12 +40,12 @@ if ($_REQUEST['SRS'] !== $mapSRID)
 	$mapSRID .= " " . $_REQUEST['SRS'];
 //$SRS_params = array();
 
-$msVersion = substr(ms_GetVersionInt(), 0, 1);
+$msVersion = substr(mapscript::msGetVersionInt(), 0, 1);
 
 if($_REQUEST["REQUEST"] == "GetMap" && isset($_REQUEST["SERVICE"]) && $_REQUEST["SERVICE"] == "WMS") {
 
-	ms_ResetErrorList();
-    $objRequest = ms_newOwsrequestObj();
+	mapscript::msResetErrorList();
+    $objRequest = new OWSRequest();
     foreach ($_REQUEST as $k => $v) {
         if (is_string($v)) {
             $objRequest->setParameter($k, stripslashes($v));
@@ -55,7 +55,7 @@ if($_REQUEST["REQUEST"] == "GetMap" && isset($_REQUEST["SERVICE"]) && $_REQUEST[
 	if(empty($_REQUEST['LAYERS'])) outputError('Missing layers');
 	$arrExtLayers = explode(',', $_REQUEST['LAYERS']);
 
-	$oMap=ms_newMapObj('');
+	$oMap=new gc_mapObj('');
 
         // set MAXSIZE of mapfile to the value defined in the configuration
         if (defined('MAPFILE_MAX_SIZE')) {
@@ -67,7 +67,7 @@ if($_REQUEST["REQUEST"] == "GetMap" && isset($_REQUEST["SERVICE"]) && $_REQUEST[
 	if(defined('PROJ_LIB')) $oMap->setConfigOption("PROJ_LIB", PROJ_LIB);
 	$aExtent = explode(",",$_REQUEST['BBOX']);
 
-	$oMap->extent->setextent($aExtent[0], $aExtent[1], $aExtent[2], $aExtent[3]);
+	$oMap->extent_setextent($aExtent[0], $aExtent[1], $aExtent[2], $aExtent[3]);
 	$oMap->setSize(intval($_REQUEST['WIDTH']), intval($_REQUEST['HEIGHT']));
 	$oMap->setProjection("init=".strtolower($_REQUEST['SRS']));
 	if ($enableDebug) {
@@ -95,12 +95,12 @@ END
 
 EOMAP;
     $oMap->web->updateFromString($mapfileBase);
- 	$oMap->outputformat->set('name','png');
-	$oMap->outputformat->set('mimetype','image/png');
-	$oMap->outputformat->set('driver','AGG/PNG');
-	$oMap->outputformat->set('extension','png');
-	$oMap->outputformat->set('imagemode',MS_IMAGEMODE_RGBA);
-	$oMap->outputformat->set('transparent',MS_ON);
+ 	$oMap->outputformat_set('name','png');
+	$oMap->outputformat_set('mimetype','image/png');
+	$oMap->outputformat_set('driver','AGG/PNG');
+	$oMap->outputformat_set('extension','png');
+	$oMap->outputformat_set('imagemode',MS_IMAGEMODE_RGBA);
+	$oMap->outputformat_set('transparent',MS_ON);
 
     $oMap->selectOutputFormat('png');
 
@@ -110,7 +110,7 @@ EOMAP;
 
 	foreach($arrExtLayers as $extLayer) {
         array_push($layersToInclude, $extLayer);
-		$oLay = ms_newLayerObj($oMap);
+		$oLay = new gc_layerObj($oMap);
 		$oLay->set('name', $extLayer);
 		$oLay->set('group', 'gdal_wms_layers');
 		$oLay->set('type', MS_LAYER_RASTER);
@@ -129,16 +129,16 @@ EOMAP;
         $oMap->save(DEBUG_DIR."print_gdal_wms.map");
     }
 
-    ms_ioinstallstdouttobuffer();
+    mapscript::msIO_installStdoutToBuffer();
 
     $oMap->owsdispatch($objRequest);
-    $contenttype = ms_iostripstdoutbuffercontenttype();
+    $contenttype = mapscript::msIO_stripStdoutBufferContentType();
     header('Content-type: image/png');
-    ms_iogetStdoutBufferBytes();
-    ms_ioresethandlers();
+    echo mapscript::msIO_getStdoutBufferBytes();
+    mapscript::msIO_resetHandlers();
 
 	// check if something bad happenend
-	$error = ms_GetErrorObj();
+	$error = mapscript::msGetErrorObj();
 	$errMsg = '';
 	while($error && $error->code != MS_NOERR) {
 		$errMsg .= sprintf("Error in %s: %s<br>\n", $error->routine, $error->message);

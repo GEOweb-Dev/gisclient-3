@@ -75,8 +75,8 @@ function cleanWMSRequest($url) {
 // questo file si occuperà solo di creare l'immagine e può essere usato anche per fare il download dell'immagine di mappa
 $mapConfig = json_decode($_REQUEST['options'], true);
 
-ms_ResetErrorList();
-$oMap=ms_newMapObj('');
+mapscript::msResetErrorList();
+$oMap=new gc_mapObj('');
 if(defined('PROJ_LIB')) $oMap->setConfigOption("PROJ_LIB", PROJ_LIB);
 $oMap->setSize(intval($mapConfig['size'][0]), intval($mapConfig['size'][1]));
 
@@ -94,7 +94,7 @@ if (count($sridParts) == 2) {
 }
 
 $oMap->setProjection("init={$srs}");
-$oMap->extent->setextent($mapConfig['extent'][0], $mapConfig['extent'][1], $mapConfig['extent'][2], $mapConfig['extent'][3]);
+$oMap->extent_setextent($mapConfig['extent'][0], $mapConfig['extent'][1], $mapConfig['extent'][2], $mapConfig['extent'][3]);
 if ($enableDebug) {
 	$oMap->setConfigOption("MS_ERRORFILE", $logfile);
 	$oMap->set('debug', 5);
@@ -105,30 +105,30 @@ if(!empty($mapConfig['resolution'])) {
 	$oMap->set('resolution', 72);
 }
 if(!empty($mapConfig['format']) && $mapConfig['format'] == 'gtiff') {
-	$oMap->outputformat->set('name','GTiff');
-	$oMap->outputformat->set('driver','GDAL/GTiff');
-	$oMap->outputformat->set('extension','tif');
-	$oMap->outputformat->set('mimetype','image/tiff');
-	$oMap->outputformat->set('imagemode', MS_IMAGEMODE_RGB);
+	$oMap->outputformat_set('name','GTiff');
+	$oMap->outputformat_set('driver','GDAL/GTiff');
+	$oMap->outputformat_set('extension','tif');
+	$oMap->outputformat_set('mimetype','image/tiff');
+	$oMap->outputformat_set('imagemode', MS_IMAGEMODE_RGB);
 	$oMap->outputformat->setOption("COMPRESS", "DEFLATE");
 } else if(!empty($mapConfig['format']) && $mapConfig['format'] == 'jpeg') {
-	$oMap->outputformat->set('name','JPG');
-	$oMap->outputformat->set('driver','AGG/JPEG');
-	$oMap->outputformat->set('extension','jpg');
-	$oMap->outputformat->set('mimetype','image/jpeg');
-	$oMap->outputformat->set('imagemode', MS_IMAGEMODE_RGB);
-	//$oMap->outputformat->set('transparent',MS_ON);
+	$oMap->outputformat_set('name','JPG');
+	$oMap->outputformat_set('driver','AGG/JPEG');
+	$oMap->outputformat_set('extension','jpg');
+	$oMap->outputformat_set('mimetype','image/jpeg');
+	$oMap->outputformat_set('imagemode', MS_IMAGEMODE_RGB);
+	//$oMap->outputformat_set('transparent',MS_ON);
 	//$oMap->outputformat->setOption("INTERLACE", "OFF");
 } else {
-	$oMap->outputformat->set('name','PNG');
-	$oMap->outputformat->set('driver','AGG/PNG');
-	$oMap->outputformat->set('extension','png');
-	$oMap->outputformat->set('imagemode', MS_IMAGEMODE_RGBA);
-	$oMap->outputformat->set('transparent',MS_ON);
+	$oMap->outputformat_set('name','PNG');
+	$oMap->outputformat_set('driver','AGG/PNG');
+	$oMap->outputformat_set('extension','png');
+	$oMap->outputformat_set('imagemode', MS_IMAGEMODE_RGBA);
+	$oMap->outputformat_set('transparent',MS_ON);
 	$oMap->outputformat->setOption("INTERLACE", "OFF");
 }
-$oMap->web->set('imagepath', IMAGE_PATH);
-$oMap->web->set('imageurl', IMAGE_URL);
+$oMap->web_set('imagepath', IMAGE_PATH);
+$oMap->web_set('imageurl', IMAGE_URL);
 
 $sessionId = null;
 if(isset($mapConfig['GC_SESSION_ID']) && !empty($mapConfig['GC_SESSION_ID'])) $sessionId = $mapConfig['GC_SESSION_ID'];
@@ -144,7 +144,7 @@ foreach($mapConfig['layers'] as $key => $layer) {
 			}
 		}
 
-		$oLay = ms_newLayerObj($oMap);
+		$oLay = new gc_layerObj($oMap);
 		$oLay->set('name', 'print_layer_'.$key);
 		$oLay->set('type', MS_LAYER_RASTER);
 		if ($enableDebug) {
@@ -165,10 +165,10 @@ foreach($mapConfig['layers'] as $key => $layer) {
 					else $layerNames = $layer['PARAMETERS']['LAYERS'];
 				}
 
-				$oLay->setConnectionType(MS_WMS);
+				$oLay->setConnectionType(MS_WMS, null);
 				$oLay->set('connection', cleanWMSRequest($url.$query));
 				if(!empty($layer['PARAMETERS']['OPACITY']) && $layer['PARAMETERS']['OPACITY'] != 100) {
-					$version = substr(ms_GetVersionInt(),0,1);
+					$version = substr(mapscript::msGetVersionInt(),0,1);
 					if ($version >= 7)
 						$oLay->updateFromString("LAYER COMPOSITE OPACITY " . $layer['PARAMETERS']['OPACITY'] . " END END");
 					else
@@ -247,7 +247,7 @@ if ($enableDebug) {
 
 $oImage = $oMap->draw();
 if (is_null($oImage)) {
-	$error = ms_GetErrorObj();
+	$error = mapscript::msGetErrorObj();
 	throw new RuntimeException($error->message);
 }
 if(isset($mapConfig['scalebar']) && $mapConfig['scalebar'] && $mapConfig['format'] != 'gtiff') {

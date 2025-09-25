@@ -36,18 +36,18 @@ if (empty($_REQUEST["theme"])) {
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
     $project = $rows[0]['project_name'];
 
-    $oMap = ms_newMapobj(ROOT_PATH.'map/'.$project.'/'.$mapset.'.map');
+    $oMap = new gc_mapObj(ROOT_PATH.'map/'.$project.'/'.$mapset.'.map');
     $mapsetFilter = $oMap->getMetaData("mapset_filter");
-    $printRect = ms_newRectObj();
-    $printRect->setextent($extent[0],$extent[1],$extent[2],$extent[3]);
-    $reqProj =  ms_newProjectionObj($sridPrint);
-    $mapProj = ms_newProjectionObj($oMap->getProjection());
+    $printRect = new gc_rectObj();
+	$printRect->setextent($extent[0],$extent[1],$extent[2],$extent[3]);
+    $reqProj =  new projectionObj($sridPrint);
+    $mapProj = new projectionObj($oMap->getProjection());
     $printRect->project($reqProj, $mapProj);
     foreach($rows as $row) {
-        if (end($themes)[0] == $row['theme_name']) {
+        if (!empty($themes) && end($themes)[0] == $row['theme_name']) {
             continue;
         }
-        $layerIndexes = $oMap->getLayersIndexByGroup($row[layergroup_name]);
+        $layerIndexes = $oMap->getLayersIndexByGroup($row['layergroup_name']);
         if (count($layerIndexes) > 0) {
             foreach($layerIndexes as $index) {
                 $oLayer = $oMap->getLayer($index);
@@ -117,7 +117,7 @@ else {
     $themes = str_replace(",","','",$_REQUEST["theme"]);
     $aLayers = array();
 
-    $sql = "select layergroup_name,project_name from ".DB_SCHEMA.".theme innner join ".DB_SCHEMA.".layergroup using(theme_id) inner join ".DB_SCHEMA.".mapset_layergroup using(layergroup_id) where mapset_name='".$mapset."' and theme_name in('".$themes."') order by layergroup_order DESC,theme_order DESC";
+    $sql = "select layergroup_name,project_name from ".DB_SCHEMA.".theme t inner join ".DB_SCHEMA.".layergroup l using(theme_id) inner join ".DB_SCHEMA.".mapset_layergroup ml using(layergroup_id) where mapset_name='".$mapset."' and theme_name in('".$themes."') order by t.zindex_correction, l.zindex_correction, layergroup_order DESC,theme_order DESC";
     $stmt = $db->prepare($sql);
     $stmt->execute();
     while($row = $stmt->fetch(PDO::FETCH_ASSOC)) {

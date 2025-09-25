@@ -105,7 +105,7 @@ if(defined('DEBUG') && DEBUG == true) {
 	error_reporting(E_ALL ^ E_NOTICE);
 }
 
-$objRequest = ms_newOwsrequestObj();
+$objRequest = new OWSRequest();
 foreach ($_REQUEST as $k => $v) if (is_string($v)) $objRequest->setParameter($k, stripslashes($v));
 
 //OGGETTO MAP MAPSCRIPT
@@ -122,7 +122,7 @@ if(!empty($showTmpMapfile)) {
 	$mapfile = "tmp.".$mapfile;
 }
 
-$oMap = ms_newMapobj($directory.$mapfile.".map");
+$oMap = new gc_mapObj($directory.$mapfile.".map");
 
 $resolution = $objRequest->getvaluebyname('resolution');
 if(!empty($resolution) && $resolution != 72) {
@@ -317,13 +317,13 @@ if (substr($sapi_type, 0, 3) != 'cgi') {
 
 
 /* Enable output buffer */
-ms_ioinstallstdouttobuffer();
+mapscript::msIO_installStdoutToBuffer();
 
 /* Eexecute request */
 $oMap->owsdispatch($objRequest);
 
 
-$contenttype = ms_iostripstdoutbuffercontenttype();
+$contenttype = mapscript::msIO_stripStdoutBufferContentType();
 $ctt = explode("/",$contenttype);
 
 /* Send response with appropriate header */
@@ -366,18 +366,18 @@ if ($ctt[0] == 'image') {
 		header("Expires: {$cacheTime}");
 	}
 
-	ms_iogetStdoutBufferBytes();
+	echo mapscript::msIO_getStdoutBufferBytes();
 } else if($ctt[1] == 'vnd.google-earth.kml+xml') {
     header("content-type: application/vnd.google-earth.kml+xml");
     header('Content-Disposition: attachment; filename="export.kml"');
-    ms_iogetStdoutBufferBytes();
+    echo mapscript::msIO_getStdoutBufferBytes();
 } else {
     //vnd.google-earth.kml+xml
 	header("Content-Type: application/xml");
-	ms_iogetStdoutBufferBytes();
+	echo mapscript::msIO_getStdoutBufferBytes();
 }
 
-ms_ioresethandlers();
+mapscript::msIO_resetHandlers();
 
 
 

@@ -30,7 +30,7 @@
 		private $navTreeValues;
 
 		// Costruttore della classe
-		function page($param=Array()){
+		function __construct($param=Array()){
             $user = new GCUser();
 			//Recupero Le Chiavi Primarie
 			$pk=_getPKeys();
@@ -176,7 +176,12 @@
 		  $this->navTreeValues=$tmp;
 		  //print_array($this->navTreeValues);
 		  $lbl="<a class=\"link_label\" href=\"#\" onclick=\"javascript:navigate([],[])\">Admin</a>";
-		  $n_elem=count($this->parametri);
+		  if (is_countable($this->parametri)){
+			$n_elem=count($this->parametri);
+		  } 
+		  else{
+			$n_elem=0;
+		  } 
 		  if ($n_elem>0){
 		    $lvl=Array();
 		    $val=Array();
@@ -281,7 +286,7 @@
 		}
 
 		function get_livello(){
-			if(count($this->parametri)){
+			if(is_countable($this->parametri) && count($this->parametri)){
 				$lvl=array_keys($this->parametri);
 				return $lvl[count($lvl)-1];
 			}
@@ -289,7 +294,7 @@
 				return "";
 		}
 		function get_value(){
-			if(count($this->parametri)){
+			if(is_countable($this->parametri) && count($this->parametri)){
 				$tmp=array_keys($this->parametri);
 				return $this->parametri[$tmp[count($this->parametri)-1]];
 			}
@@ -298,7 +303,7 @@
 		}
 
 		function get_parentValue(){
-			if(count($this->parametri)>1){
+			if(is_countable($this->parametri) && count($this->parametri)>1){
 				$tmp=array_keys($this->parametri);
 				return $this->parametri[$tmp[count($this->parametri)-2]];
 			}
@@ -380,7 +385,7 @@
 
 					$tb=new Tabella_h($tab["config_file"].".tab","list");
 					for($j=0;$j<count($tb->function_param);$j++) $tb->function_param[$j]=$this->parametri[$tb->function_param[$j]];
-
+					$flt = array();
 					foreach($this->pageKeys as $key) if ($el["value"]) $flt[]="$key = ".$this->db->quote($el["value"]);
 					$filter=@implode(" AND ",$flt);
 					if($tab["level"]=="project" && !$user->isAdmin() && defined('USER_SCHEMA'))
@@ -676,7 +681,7 @@
 					$j=0;
 					$filter=@implode(" AND ",$flt);
 
-					if(count($this->errors)){
+					if(is_countable($this->errors) && count($this->errors)){
 						$tb->set_errors($this->errors);
 						$tb->set_dati($_POST["dati"]);
 					}
@@ -716,7 +721,7 @@
 						$flt[]="$k=".$this->db->quote($v);
 					}
 					$filter=@implode(" AND ",$flt);
-					if(count($this->errors)){
+					if(is_countable($this->errors) && count($this->errors)){
 						$tb->set_errors($this->errors);
 						$tb->set_dati($_POST["dati"]);
 					}
@@ -745,7 +750,7 @@
 						$prm["pkey_value[$j]"]=$this->_get_pkey_value($tb->pkeys[$j]);
 					}
 					$filter=$tab["parent_name"]."_id = ".$this->db->quote($el["value"]);
-					if(count($this->errors)){
+					if(is_countable($this->errors) && count($this->errors)){
 						$tb->set_errors($this->errors);
 						$tb->set_dati($_POST["dati"]);
 					}
@@ -877,7 +882,7 @@
 					}
 					$tb=new Tabella_v($prm["config_file"],"new");
 					for($j=0;$j<count($tb->function_param);$j++) $tb->function_param[$j]=$this->parametri[$tb->function_param[$j]];
-					if(count($this->errors)){
+					if(is_countable($this->errors) && count($this->errors)){
 						$tb->set_errors($this->errors);
 						$tb->set_dati($_POST["dati"]);
 					}
@@ -909,8 +914,14 @@
 				unset($table);
 
 				for($i=0;$i<count($this->tableList);$i++){
-
-					$el=@each(@array_reverse($this->parametri,true));
+					$el = false;
+					if (is_array($this->parametri)){
+						$el = array();
+						$el[0] = array_key_last($this->parametri);
+						$el['key'] = $el[0];
+						$el[1] = $this->parametri[$el[0]];
+						$el['value'] = $el[1];
+					} 
 					$this->_getKey($el["value"]);
 					$prm=$this->_get_frm_parameter();
 					//VALORIZZO SE PRESENTI I PARAMETRI DELLE FUNZIONI DI SELECT
@@ -1025,7 +1036,7 @@
 						echo "<script>\n\t".$tab["javascript"]."('".$tab["form_name"]."');\n</script> \n";
 					}
 				}
-				$arr_keys=(count($this->parametri))?(array_keys($this->parametri)):(Array());
+				$arr_keys=(is_countable($this->parametri) && count($this->parametri))?(array_keys($this->parametri)):(Array());
 
 				if(($this->mode==self::MODE_VIEW || $this->mode==self::MODE_LIST) && !empty($arr_keys[0])){
 					$tmp=$this->parametri;

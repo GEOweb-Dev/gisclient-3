@@ -32,7 +32,7 @@ if(defined('DEBUG') && DEBUG == true) {
 	error_reporting(E_ALL ^ E_NOTICE);
 }
 
-$objRequest = ms_newOwsrequestObj();
+$objRequest = new OWSRequest();
 $skippedParams = array();
 $invertedAxisOrderSrids = array(31466,31467,31468,31254,31255,31256,31257,31258,31259);
 
@@ -55,7 +55,7 @@ foreach ($_REQUEST as $k => $v) {
 }
 
 $parameterName = null;
-$requestedFormat = strtolower($objRequest->getValueByName('format'));
+$requestedFormat = isset($requestedFormat)?strtolower($objRequest->getValueByName('format')):null;
 // avoid that transparent is requested, when the format does not support
 // transparency
 if (!empty($skippedParams['transparent'])) {
@@ -144,7 +144,7 @@ if (!is_readable($mapfile)) {
 	exit(1);
 }
 
-$oMap = ms_newMapobj($mapfile);
+$oMap = new gc_mapObj($mapfile);
 print_debug('opened mapfile "' .realpath($mapfile). '": '.get_class($oMap), null, 'system');
 
 $wfs_getfeature_formatlist = $oMap->getMetaData('wfs_getfeature_formatlist');
@@ -199,6 +199,7 @@ if($objRequest->getvaluebyname('srs') && $oMap->getMetaData($objRequest->getvalu
 	$objRequest->setParameter("srs", $oMap->getMetaData($objRequest->getvaluebyname('srs')));
 }
 if($objRequest->getvaluebyname('srs')) {
+	print_debug ('SRID: ' . $objRequest->getvaluebyname('srs'), null, 'system');
 	$srsParts = explode(':', strtolower($objRequest->getvaluebyname('srs')));
 	if (count($srsParts) == 7) {
 		// e.g.: 'urn:ogc:def:crs:EPSG::4306'
@@ -208,6 +209,7 @@ if($objRequest->getvaluebyname('srs')) {
 		$srs = $srsParts[0].':'.$srsParts[1];
 	}
 	$oMap->setProjection("+init=".strtolower($srs));
+	print_debug ('MAP SRID: ' . $oMap->getProjection(), null, 'system');
 }
 
 $url = OwsHandler::currentPageURL();
@@ -416,11 +418,11 @@ if (substr($sapi_type, 0, 3) != 'cgi') {
 }
 
 /* Enable output buffer */
-ms_ioinstallstdouttobuffer();
+mapscript::msIO_installStdoutToBuffer();
 
 /* Execute request */
 @$oMap->owsdispatch($objRequest);
-$contenttype = ms_iostripstdoutbuffercontenttype();
+$contenttype = mapscript::msIO_stripStdoutBufferContentType();
 
 /* Send response with appropriate header */
 if (!empty($contenttype) && substr($contenttype, 0, 6) == 'image/') {
@@ -461,13 +463,13 @@ if (!empty($contenttype) && substr($contenttype, 0, 6) == 'image/') {
 		header("Last-Modified: {$serverTime}");
 		header("Expires: {$cacheTime}");
 	}
-	ms_iogetStdoutBufferBytes();
-} elseif (strstr($contenttype, 'google-earth')) {
+	echo mapscript::msIO_getStdoutBufferBytes();
+} elseif (!empty($contenttype) && strstr($contenttype, 'google-earth')) {
 
 	if ($requestedFormat == 'kmz' &&
 		strtolower($objRequest->getValueByName('format')) == 'kml') {
 		header("Content-Type: application/vnd.google-earth.kmz");
-		$kmlString = ms_iogetstdoutbufferstring();
+		$kmlString = mapscript::msIO_getStdoutBufferString();
 		$owsHandler = new OwsHandler();
 		$kmzString = $owsHandler->assembleKmz($kmlString);
 		header('Content-Disposition: attachment; filename="layerdata.kmz"');
@@ -475,11 +477,25 @@ if (!empty($contenttype) && substr($contenttype, 0, 6) == 'image/') {
 	} else {
 		header("Content-Type: $contenttype");
 		header('Content-Disposition: attachment; filename="layerdata.kml"');
-		ms_iogetStdoutBufferBytes();
+		echo mapscript::msIO_getStdoutBufferBytes();
 	}
 } else {
 	header("Content-Type: application/xml");
-	ms_iogetStdoutBufferBytes();
+	if (strtoupper($objRequest->getvaluebyname('request')) == 'GETCAPABILITIES') {
+		$capabilitiesCacheFile = $projectDirectory.$mapfileBasename."_capabilities.xml";
+		if (file_exists($capabilitiesCacheFile)) {
+			$capabilitiesCache =  file_get_contents($capabilitiesCacheFile);
+			echo $capabilitiesCache;
+		}
+		else {
+			$capabilitiesCache = mapscript::msIO_getStdoutBufferString();
+			file_put_contents($capabilitiesCacheFile, $capabilitiesCache);
+			echo $capabilitiesCache;
+		}
+	}
+	else {
+		echo mapscript::msIO_getStdoutBufferBytes();
+	}
 }
 
-ms_ioresethandlers();
+mapscript::msIO_resetHandlers();

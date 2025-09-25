@@ -62,7 +62,7 @@ if($_REQUEST["REQUEST"] == "DeleteLayer"){
 		$fileName = $_REQUEST['IMAGEPATH'].$_REQUEST['REDLINEID'].".tif";
 		@unlink($fileName);
 	}
-	
+
 	die(json_encode(array('result'=>'OK')));
 }
 
@@ -98,7 +98,7 @@ if($_REQUEST["REQUEST"] == "SaveLayer"){
 	$featureCollection = json_decode($_REQUEST['features'], true);
 	$redlineId = date('YmdHis');
 	$redlineTitle = !empty($_REQUEST['TITLE']) ? $_REQUEST['TITLE'] : null;
-    
+
     $inserted = false;
 
 	foreach($featureCollection['features'] as $feature) {
@@ -125,9 +125,9 @@ if($_REQUEST["REQUEST"] == "SaveLayer"){
 			outputError($e->getMessage());
 		}
 		$rowId = $db->lastInsertId(REDLINE_SCHEMA.'.'.REDLINE_TABLE.'_id_seq');
-		
+
 		$wktGeom = parseGeoJSONGeomtry($feature['geometry'], $mapSRID);
-		
+
 		$sql = "update ".REDLINE_SCHEMA.".".REDLINE_TABLE." set ".$geomTypes[$geom['type']]['db_field']." = $wktGeom where id = :id";
 		$stmt = $db->prepare($sql);
 
@@ -149,7 +149,7 @@ if($_REQUEST["REQUEST"] == "SaveLayer"){
 
 if($_REQUEST["REQUEST"] == "GetMap" && isset($_REQUEST["SERVICE"]) && $_REQUEST["SERVICE"]=="WMS") {
 
-	if(empty($_REQUEST['REDLINEID'])) die("MANCA ID"); 
+	if(empty($_REQUEST['REDLINEID'])) die("MANCA ID");
 	$geomFields = array();
 	foreach($geomTypes as $type) array_push($geomFields, $type['db_field']);
 	$sql = "select ".implode(',', $geomFields).", note, color from ".REDLINE_SCHEMA.".".REDLINE_TABLE.
@@ -167,47 +167,47 @@ if($_REQUEST["REQUEST"] == "GetMap" && isset($_REQUEST["SERVICE"]) && $_REQUEST[
 	}
 
 
-	$oMap=ms_newMapObj('');
+	$oMap=new gc_mapObj('');
 	if(defined('PROJ_LIB')) $oMap->setConfigOption("PROJ_LIB", PROJ_LIB);
 	$aExtent = explode(",",$_REQUEST['BBOX']);
-	$oMap->extent->setextent($aExtent[0], $aExtent[1], $aExtent[2], $aExtent[3]);
-	$oMap->setSize(intval($_REQUEST['WIDTH']), intval($_REQUEST['HEIGHT']));	
+	$oMap->extent_setextent($aExtent[0], $aExtent[1], $aExtent[2], $aExtent[3]);
+	$oMap->setSize(intval($_REQUEST['WIDTH']), intval($_REQUEST['HEIGHT']));
 	$oMap->setProjection("init=".strtolower($_REQUEST['SRS']));
-	
-	$oMap->outputformat->set('name','PNG');
-	$oMap->outputformat->set('driver','GD/PNG');
-	$oMap->outputformat->set('extension','png');
-	$oMap->outputformat->set('transparent',MS_ON);
+
+	$oMap->outputformat_set('name','PNG');
+	$oMap->outputformat_set('driver','GD/PNG');
+	$oMap->outputformat_set('extension','png');
+	$oMap->outputformat_set('transparent',MS_ON);
 	$oMap->outputformat->setOption("INTERLACE", "OFF");
-	
-	$oMap->setFontSet(ROOT_PATH.'fonts/fonts.list');		
-	
+
+	$oMap->setFontSet(ROOT_PATH.'fonts/fonts.list');
+
 	$layerProjString = (($mapSRID == REDLINE_SRID) || empty($SRS_params[REDLINE_SRID]))?"init=epsg:".REDLINE_SRID:$SRS_params[REDLINE_SRID];
-	
+
 	foreach($types as $type) {
-		$oLay = ms_newLayerObj($oMap);
+		$oLay = new gc_layerObj($oMap);
 		$oLay->set('name', 'redline_'.$type['db_type']);
 		$oLay->set('group', 'redline');
 		$oLay->set('type', $type['ms_type']);
-		$oLay->setConnectionType(MS_POSTGIS);
+		$oLay->setConnectionType(MS_POSTGIS, null);
 		$oLay->set('connection', "user=".DB_USER." password=".DB_PWD." dbname=".DB_NAME." host=".DB_HOST." port=".DB_PORT);
         $data = "the_geom from (select id, note, color, redline_id, ".$type['db_field']." as the_geom from ".REDLINE_SCHEMA.".".REDLINE_TABLE.") as foo using unique id using srid=".REDLINE_SRID;
 		$oLay->set('data', $data);
 		$oLay->setFilter("redline_id=".$_REQUEST['REDLINEID']);
 		$oLay->setProjection($layerProjString);
 		$oLay->set('sizeunits',MS_PIXELS);
-		$oClass = ms_newClassObj($oLay);
-		$oStyle = ms_newStyleObj($oClass);
-		$oStyle->setbinding(MS_STYLE_BINDING_OUTLINECOLOR, "color");	
+		$oClass = new gc_classObj($oLay);
+		$oStyle = new gc_styleObj($oClass);
+		$oStyle->setbinding(MS_STYLE_BINDING_OUTLINECOLOR, "color");
 		$oStyle->set("width", 1);
 		$oLay->set('status', MS_ON);
 
 		//Annotazione
-		$oLay = ms_newLayerObj($oMap);
+		$oLay = new gc_layerObj($oMap);
 		$oLay->set('name','redline_text_'.$type['db_type']);
 		$oLay->set('group', 'redline');
 		$oLay->set('type', MS_LAYER_ANNOTATION);
-		$oLay->setConnectionType(MS_POSTGIS);
+		$oLay->setConnectionType(MS_POSTGIS, null);
 		$oLay->set('connection', "user=".DB_USER." password=".DB_PWD." dbname=".DB_NAME." host=".DB_HOST." port=".DB_PORT);
         $geom = !empty($type['label_function']) ? $type['label_function'].'('.$type['db_field'].')' : $type['db_field'];
 		$oLay->set('data', "the_geom from (select id, note, color, redline_id, $geom as the_geom from ".REDLINE_SCHEMA.".".REDLINE_TABLE.") as foo using unique id using srid=".REDLINE_SRID);
@@ -216,12 +216,12 @@ if($_REQUEST["REQUEST"] == "GetMap" && isset($_REQUEST["SERVICE"]) && $_REQUEST[
 		$oLay->setProjection($layerProjString);
 		$oLay->set('sizeunits', MS_PIXELS);
 		$oLay->set('labelitem', "note");
-		
+
 		// TODO: already called some lines before. Can this be removed?
-		$oClass = ms_newClassObj($oLay);
+		$oClass = new gc_classObj($oLay);
 		// Label properties
 		$lbl = null;
-		if (ms_GetVersionInt() < 60200) {
+		if (mapscript::msGetVersionInt() < 60200) {
 			$lbl = $oClass->label;
 		} else if($oClass->numlabels > 0) {
 			$lbl = $oClass->getLabel(0);
@@ -238,10 +238,10 @@ if($_REQUEST["REQUEST"] == "GetMap" && isset($_REQUEST["SERVICE"]) && $_REQUEST[
 		$oLay->set('status', MS_ON);
 	}
 
-	ms_ResetErrorList();	
+	mapscript::msResetErrorList();
 	$oImage=$oMap->draw();
-			
-	$error = ms_GetErrorObj();
+
+	$error = mapscript::msGetErrorObj();
 	if($error->code != MS_NOERR){
 		while($error->code != MS_NOERR){
 			print("CREATE MAP ERROR <br>");
@@ -267,7 +267,7 @@ function outputError($msg) {
 
 function parseGeoJSONGeomtry($geom, $mapSRID) {
 	global $geomTypes,$SRS_params;
-	
+
 	$wkt = "st_geomfromtext('".$geomTypes[$geom['type']]['db_type']."(";
 	$points = array();
 	$coordinates = $geom['coordinates'];
@@ -281,7 +281,7 @@ function parseGeoJSONGeomtry($geom, $mapSRID) {
 	$wkt .= implode(',', $points);
 	if($geom['type'] == 'Polygon') $wkt .= ')';
 	$wkt .= ")', $mapSRID)";
-	
+
 	if($mapSRID != REDLINE_SRID) {
 		if(empty($SRS_params[REDLINE_SRID]) || empty($SRS_params[$mapSRID])){
 			$wkt = "st_transform($wkt, ".REDLINE_SRID.")";

@@ -64,7 +64,7 @@ class gcFeature {
     function __construct($i18n = null) {
         $this->db = GCApp::getDB();
         $this->i18n = $i18n;
-        $this->msVersion = substr(ms_GetVersionInt(), 0, 1);
+        $this->msVersion = substr(mapscript::msGetVersionInt(), 0, 1);
     }
 
     public function initFeature($layerId) {

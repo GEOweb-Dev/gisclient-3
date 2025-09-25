@@ -207,7 +207,8 @@ class printDocument {
         $dom = $this->buildDOM(true);
         $xml = $dom->saveXML();
 
-        $pdfFile = runFOP($dom, $xslFile, array('tmp_path'=>$this->options['TMP_PATH'], 'prefix'=>'GCPrintMap-', 'out_name'=>$this->options['TMP_PATH'].'PrintMap-'.date('Ymd-His').'.pdf'));
+        $randomFilePattern = '-' . substr(md5(uniqid(mt_rand(), true)), 0, 8);
+        $pdfFile = runFOP($dom, $xslFile, array('tmp_path'=>$this->options['TMP_PATH'], 'prefix'=>'GCPrintMap-', 'out_name'=>$this->options['TMP_PATH'].'PrintMap-'.date('Ymd-His').$randomFilePattern.'.pdf'));
         $pdfFile = str_replace($this->options['TMP_PATH'], $this->options['TMP_URL'], $pdfFile);
         $this->deleteOldTmpFiles();
         return $pdfFile;
@@ -332,12 +333,12 @@ class printDocument {
         if(!empty($project) && !empty($mapset)) {
             $this->project = $project;
             $this->mapset = $tmp . $mapset;
-            $oMap = ms_newMapobj(ROOT_PATH.'map/'.$project.'/'.$tmp.$mapset.'.map');
+            $oMap = new gc_mapObj(ROOT_PATH.'map/'.$project.'/'.$tmp.$mapset.'.map');
             $mapsetFilter = $oMap->getMetaData("mapset_filter");
-            $printRect = ms_newRectObj();
+            $printRect = new gc_rectObj();
             $printRect->setextent($this->options['extent'][0],$this->options['extent'][1],$this->options['extent'][2],$this->options['extent'][3]);
-            $reqProj =  ms_newProjectionObj($this->options['auth_name'].":".$this->options['srid']);
-            $mapProj = ms_newProjectionObj($oMap->getProjection());
+            $reqProj =  new projectionObj($this->options['auth_name'].":".$this->options['srid']);
+            $mapProj = new projectionObj($oMap->getProjection());
             $printRect->project($reqProj, $mapProj);
             foreach($themes as &$theme) {
                 $theme['groups'] = array();

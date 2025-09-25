@@ -165,22 +165,29 @@ class Symbol{
 		$legendIconH = LEGEND_ICON_H;
 		$oMap = $this->oMap;
 		$oMap->setFontSet(ROOT_PATH.'fonts/fonts.list');
-		$oMap->outputformat->set('name','PNG');
-		$oMap->outputformat->set('driver','GD/PNG');
-		$oMap->outputformat->set('extension','png');
+		if (method_exists($oMap->outputformat, 'set')){
+			$oMap->outputformat->set('name','PNG');
+			$oMap->outputformat->set('driver','AGG/PNG');
+			$oMap->outputformat->set('extension','png');
+		}
+		else {
+			$oMap->outputformat->name = 'PNG';
+			$oMap->outputformat->driver = 'AGG/PNG';
+			$oMap->outputformat->setExtension('png');
+		}
 		$oMap->outputformat->setOption("INTERLACE", "OFF");
-		$oLay=ms_newLayerObj($oMap);
+		$oLay=new gc_layerObj($oMap);
 		$oLay->set('type', $class["icontype"]);
-		$oClass=ms_newClassObj($oLay);
+		$oClass=new gc_classObj($oLay);
 		if($this->symbolSize[$class["icontype"]])
 			$smbSize=$this->symbolSize[$class["icontype"]];
 		$style=isset($class["style"])?$class["style"]:array();
 		//print_array($class);
 		//Aggiungo gli stili
 		for($i=0;$i<count($style);$i++){
-			$oStyle=ms_newStyleObj($oClass);
+			$oStyle=new gc_styleObj($oClass);
 			$oStyle->set("size",$smbSize);
-			if(!empty($style[$i]['symbol'])) $oStyle->set('symbolname',$style[$i]['symbol']);
+			if(!empty($style[$i]['symbol'])) $oStyle->setSymbolByName($oMap,$style[$i]['symbol']);
 			if(!empty($style[$i]['angle']))	$oStyle->set('angle',$style[$i]['angle']);
 			if(isset($style[$i]['color']) && count($style[$i]['color'])==3)	$oStyle->color->setRGB($style[$i]['color'][0],$style[$i]['color'][1],$style[$i]['color'][2]);
 			if(isset($style[$i]['outlinecolor']) && count($style[$i]['outlinecolor'])==3) $oStyle->outlinecolor->setRGB($style[$i]['outlinecolor'][0],$style[$i]['outlinecolor'][1],$style[$i]['outlinecolor'][2]);
@@ -223,13 +230,13 @@ class Symbol{
 		$mapText[] = implode("\n",$aSymbol);
 		$mapText[] = "END";
 	    //test sintassi mapfile
-		ms_ResetErrorList();
+		mapscript::msResetErrorList();
 		try {
 			print_debug(implode("\n",$mapText),null,'symbolmap');
-			$this->oMap = @ms_newMapObjFromString(implode("\n",$mapText),ROOT_PATH.'map/tmp');
+			$this->oMap = @mapscript::msLoadMapFromString(implode("\n",$mapText),ROOT_PATH.'map/tmp');
 		}
 		catch (Exception $e) {
-			$error = ms_GetErrorObj();
+			$error = mapscript::msGetErrorObj();
 			if($error->code != MS_NOERR){
 				$this->mapError=150;
 				while(is_object($error) && $error->code != MS_NOERR) {

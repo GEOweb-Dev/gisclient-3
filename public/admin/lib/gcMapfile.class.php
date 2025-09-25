@@ -56,7 +56,7 @@ class gcMapfile{
     function __construct ($languageId = null){
         $this->db = GCApp::getDB();
         $this->languageId = $languageId;
-        $this->msVersion = substr(ms_GetVersionInt(),0,1);
+        $this->msVersion = substr(mapscript::msGetVersionInt(),0,1);
         if(isset($_SESSION['save_to_tmp_map']) && $_SESSION['save_to_tmp_map'] === true ) $this->target = 'tmp';
     }
 
@@ -616,12 +616,12 @@ END #MAP";
         }
 
         //test sintassi mapfile
-        ms_ResetErrorList();
+        mapscript::msResetErrorList();
         try {
-            @ms_newMapobj($mapFilePath);
+            @new gc_mapObj($mapFilePath);
         }
         catch (Exception $e) {
-            $error = ms_GetErrorObj();
+            $error = mapscript::msGetErrorObj();
             if($error->code != MS_NOERR){
                 $this->mapError=150;
                 while(is_object($error) && $error->code != MS_NOERR) {
@@ -658,7 +658,7 @@ END";
     }
 
     function _isDriverSupported($driverName) {
-        $mapserverSupport = ms_GetVersion();
+        $mapserverSupport = mapscript::msGetVersion();
         list($driver, $format) = explode('/', $driverName);
 
         // **** for OGR Driver check in INPUT

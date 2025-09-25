@@ -71,7 +71,20 @@ class mapImage {
 
         $this->tiles = $tiles;
         $this->imageSize = $imageSize;
-        $this->db = GCApp::getDB();
+        if (defined('PRINT_VECTORS_DB')) {
+        	if(!defined('PRINT_VECTORS_PORT')) define('PRINT_VECTORS_PORT', '5432');
+        	$connStr = 'user=' . PRINT_VECTORS_USER .
+        			' password=' . PRINT_VECTORS_PWD .
+        			' dbname=' . PRINT_VECTORS_DB .
+        			' host=' . PRINT_VECTORS_HOST .
+        			' port=' . PRINT_VECTORS_PORT .
+        			'/' . PRINT_VECTORS_SCHEMA;
+        	$dataDB = new GCDataDB($connStr);
+        	$this->db = $dataDB->db;
+        }
+        else {
+        	$this->db = GCApp::getDB();
+        }
         $this->srid = $srid;
         $this->wmsMergeUrl = printDocument::addPrefixToRelativeUrl(PUBLIC_URL.$this->wmsMergeUrl);
 
@@ -338,15 +351,13 @@ class mapImage {
         $customFieldsDecl = str_replace('=', ' ', http_build_query(self::$vectorFields, '', ', '));
         $customFieldsVal = ':' . implode(', :', array_keys(self::$vectorFields));
 
-        $db = GCApp::getDB();
-
-        if(!GCApp::tableExists($db, $schema, $tableName)) {
+        if(!GCApp::tableExists($this->db, $schema, $tableName)) {
             $sql = 'create sequence '.$schema.'.'.$tableName.'_print_id_seq ';
-            $db->exec($sql);
+            $this->db->exec($sql);
             $sql = "create table $schema.$tableName (gid serial, print_id integer, insert_time timestamp without time zone not null default now(), $customFieldsDecl) WITH (OIDS=FALSE)";
-            $db->exec($sql);
+            $this->db->exec($sql);
             $sql = 'select addgeometrycolumn(:schema, :table, :column, :srid, :type, 2)';
-            $addGeometryColumn = $db->prepare($sql);
+            $addGeometryColumn = $this->db->prepare($sql);
             foreach(self::$vectorTypes as $key => $type) {
                 $addGeometryColumn->execute(array(
                     'schema'=>$schema,
@@ -357,11 +368,11 @@ class mapImage {
                 ));
             }
             $sql = 'GRANT SELECT ON TABLE '.$schema.'.'.$tableName.' TO '.MAP_USER;
-            $db->exec($sql);
+            $this->db->exec($sql);
         }
 
         $sql = "select nextval('".$schema.".".$tableName."_print_id_seq')";
-        $printId = $db->query($sql)->fetchColumn(0);
+        $printId = $this->db->query($sql)->fetchColumn(0);
 
         $vectors = array();
         foreach($this->options['vectors'] as $vector) {
@@ -392,7 +403,7 @@ class mapImage {
             $defaultFillColorOpacity = (defined('PRINT_VECTORS_DEFAULT_FILLCOLOR_OPACITY'))?PRINT_VECTORS_DEFAULT_FILLCOLOR_OPACITY:null;
 
             $sql = 'insert into '.$schema.'.'.$tableName.' (print_id, '.$customFields.', '.$field.') values (:print_id,'.$customFieldsVal.', ' .$geomInsert.' )';
-            $stmt = $db->prepare($sql);
+            $stmt = $this->db->prepare($sql);
             foreach($features as $feature) {
                 $params = array(
                     'print_id'=>$printId,
@@ -423,9 +434,7 @@ class mapImage {
         $tableName = PRINT_VECTORS_TABLE;
         $schema = defined('PRINT_VECTORS_SCHEMA') ? PRINT_VECTORS_SCHEMA : 'public';
 
-        $db = GCApp::getDB();
-
         $sql = 'delete from '.$schema.'.'.$tableName." where (insert_time + interval '1 day') < NOW()";
-        $db->exec($sql);
+        $this->db->exec($sql);
     }
 }

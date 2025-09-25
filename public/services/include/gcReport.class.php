@@ -23,7 +23,7 @@ class gcReport {
     var $mapsetName;
     var $mapsetSingleLayer;
     var $reportConfig;
-    var $reportQueryResult;
+    var $reportQueryResult = array();
     var $templates;
     var $totRowsReport = 0;
     var $request;
@@ -130,7 +130,7 @@ class gcReport {
         }
 
         $this->_initQuery($request);
-        if ($this->reportQueryResult["result"] === 'error') {
+        if (isset($this->reportQueryResult["result"]) && $this->reportQueryResult["result"] === 'error') {
             return;
         }
         $this->reportQueryResult['templates'] = $this->templates;
@@ -175,7 +175,7 @@ class gcReport {
         }
         $this->materialize = true;
         $this->_initQuery($request);
-        if ($this->reportQueryResult["result"] === 'error') {
+        if (isset($this->reportQueryResult["result"]) && $this->reportQueryResult["result"] === 'error') { // **** TODO
             return;
         }
         $this->materialize = false;
@@ -236,7 +236,7 @@ class gcReport {
         }
         print_debug("Materialize report " . $request['report_id'] . " - execution started",null,'report');
 
-        echo 'CREATE MATERIALIZED VIEW ' . $datalayerSchema . '.' . $tableName . ' AS ' . $queryString . ' WITH DATA';
+        //echo 'CREATE MATERIALIZED VIEW ' . $datalayerSchema . '.' . $tableName . ' AS ' . $queryString . ' WITH DATA';
         $dataDB->db->query('DROP MATERIALIZED VIEW IF EXISTS ' . $datalayerSchema . '.' . $tableName);
         $dataDB->db->query('CREATE MATERIALIZED VIEW ' . $datalayerSchema . '.' . $tableName . ' AS ' . $queryString . ' WITH NO DATA');
         $dataDB->db->query('GRANT SELECT ON ' . $datalayerSchema . '.' . $tableName . ' TO ' . MAP_USER);
@@ -668,7 +668,7 @@ class gcReport {
                 if(!$this->isPublicLayerQueryable)
                     continue;
             } else {
-                if($_SESSION['GISCLIENT_USER_LAYER'][$row['project_name']][$typeName]['WFS'] != 1)
+                if($_SESSION['GISCLIENT_USER_LAYER'][$row['project_name']][$typeName]['WFS'] != 1) // **** TODO
                     continue;
             }
 

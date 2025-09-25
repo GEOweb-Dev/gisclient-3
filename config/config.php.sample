@@ -85,6 +85,7 @@ define('PRINT_VECTORS_TABLE', 'print_vectors');
 define('PRINT_VECTORS_SRID', 4326);
 define('PRINT_VECTORS_OPACITY', 50);
 define('PRINT_VECTORS_USE_SLD', TRUE);
+define('PRINT_VECTORS_MAP_TEMPLATE', 'config.printvectors.map');
 define('PRINT_VECTORS_DEFAULT_COLOR', '#FF00FF');
 define('PRINT_VECTORS_DEFAULT_COLOR_OPACITY', 90);
 define('PRINT_VECTORS_DEFAULT_FILLCOLOR', '#FF00FF');
@@ -105,6 +106,12 @@ define('REDLINE_SCHEMA', 'public'); //non obbligatorio, default public
 define('REDLINE_TABLE', 'annotazioni');
 define('REDLINE_SRID', '4326');
 define('REDLINE_FONT', 'dejavu-sans-bold'); // non obbligatorio, default arial
+
+// **** Compatibility with SWIG PHP MapScript (Mapserver 7.4+)
+require_once (ROOT_PATH."lib/mapscript.php"); // Uncomment this only for Mapserver Vers. < 8; mapscript.php must be copied/linked properly
+require_once (ROOT_PATH."lib/mapscript_gc_swig.php");
+// **** Compatibility with PHP MapScript (Mapserver up to version 7.6)
+//require_once (ROOT_PATH."lib/mapscript_gc_cgi.php");
 
 require_once (ROOT_PATH."lib/debug.php");
 require_once (ROOT_PATH."config/config.db.php");

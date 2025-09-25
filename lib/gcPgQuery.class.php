@@ -92,14 +92,31 @@ class PgQuery{
 		if(!empty($request['projectName']) && !empty($request['mapsetName'])) {
 		    $mapsetFileName = ROOT_PATH.'map/'.$request['projectName'].'/'.$request['mapsetName'].'.map';
 		    if (is_readable($mapsetFileName)) {
-		        $oMap = ms_newMapobj($mapsetFileName);
+		        $oMap = new gc_mapObj($mapsetFileName);
 		        $mapsetFilter = $oMap->getMetaData("mapset_filter");
 		    }
 		}
 
 		$userGroupFilter = '';
         $user = new GCUser();
-        if(!$user->isAdmin($this->projectName)) {
+		$isAuthenticated = $user->isAuthenticated();
+		if (empty($_SESSION['GISCLIENT_USER_LAYER'])) {
+				$user->setAuthorizedLayers(array('mapset_name' => $request['mapsetName']));
+		}
+		// user does not have an open session, try to log in
+		if (!$isAuthenticated &&
+			isset($_SERVER['PHP_AUTH_USER']) &&
+			isset($_SERVER['PHP_AUTH_PW'])) {
+			if ($user->login($_SERVER['PHP_AUTH_USER'], GCUser::encPwd($_SERVER['PHP_AUTH_PW']))) {
+				$user->setAuthorizedLayers(array('mapset_name' => $request['mapsetName']));
+				$isAuthenticated = true;
+			}
+		}
+		// user could not even log in, send correct headers and exit
+		if (!$isAuthenticated) {
+			print_debug('unauthorized access in gcPgQuery', null, 'system');
+		}
+        if(!$user->isAdmin($this->projectName)) { // **** Check
             $this->authorizedGroups = $user->getGroups();
             $userGroup = '';
             if(!empty($this->authorizedGroups)) $userGroup =  " OR groupname in('".implode("','", $this->authorizedGroups)."')";

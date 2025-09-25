@@ -23,7 +23,7 @@ if(!empty($_REQUEST["filtervalue"]) && !empty($_REQUEST["filterfields"])) {
 if(!empty($_REQUEST["project"]) && !empty($_REQUEST["mapset"])) {
     $mapsetFileName = ROOT_PATH.'map/'.$_REQUEST["project"].'/'.$_REQUEST["mapset"].'.map';
     if (is_readable($mapsetFileName)) {
-        $oMap = ms_newMapobj($mapsetFileName);
+        $oMap = new gc_mapObj($mapsetFileName);
         $mapsetFilter = $oMap->getMetaData("mapset_filter");
     }
 }

@@ -1,0 +1,539 @@
+MAP
+  CONFIG "PROJ_LIB" "/usr/share/proj"
+  CONFIG "MS_ERRORFILE" "/var/srv/geoweb/gisclient-3/config/debug//mapfile.vector.debug"
+  DEBUG 5
+  EXTENT 493450.075724133 4918572.41929597 493617.07458777 4918679.92100052
+  FONTSET "/var/srv/geoweb/gisclient-3/fonts/fonts.list"
+  IMAGETYPE "png"
+  MAXSIZE 16384
+  NAME "MS"
+  SIZE 1642 1057
+  STATUS ON
+  UNITS METERS
+
+  OUTPUTFORMAT
+    NAME "png"
+    MIMETYPE "image/png"
+    DRIVER "AGG/PNG"
+    EXTENSION "png"
+    IMAGEMODE RGBA
+    TRANSPARENT TRUE
+  END # OUTPUTFORMAT
+
+  SYMBOL
+    NAME "CIRCLE"
+    TYPE ELLIPSE
+    FILLED TRUE
+    IMAGE "CIRCLE"
+    POINTS
+      1 1
+    END
+  END
+
+  SYMBOL
+    NAME "TRIANGLE"
+    TYPE VECTOR
+    FILLED TRUE
+    IMAGE "TRIANGLE"
+    POINTS
+      0 1
+      0.5 0
+      1 1
+      0 1
+    END
+  END
+
+  PROJECTION
+    "init=epsg:25832"
+  END # PROJECTION
+  LEGEND
+    KEYSIZE 20 10
+    KEYSPACING 5 5
+    LABEL
+      SIZE 10
+      OFFSET 0 0
+      SHADOWSIZE 1 1
+    END # LABEL
+    STATUS OFF
+  END # LEGEND
+
+  QUERYMAP
+    SIZE -1 -1
+    STATUS OFF
+    STYLE HILITE
+  END # QUERYMAP
+
+  SCALEBAR
+    INTERVALS 4
+    LABEL
+      SIZE 10
+      OFFSET 0 0
+      SHADOWSIZE 1 1
+    END # LABEL
+    SIZE 200 3
+    STATUS OFF
+    UNITS MILES
+  END # SCALEBAR
+
+ # WEB
+ # END # WEB
+
+  LAYER
+    COMPOSITE
+    END # COMPOSITE
+    #CONNECTION
+    CONNECTIONTYPE POSTGIS
+    #DATA
+    GROUP "printvectors"
+    LABELITEM "label"
+    NAME "printvectors_POINT"
+    #PROCESSING
+    #PROJECTION
+    #END # PROJECTION
+    STATUS ON
+    TILEITEM "location"
+    TYPE POINT
+    UNITS METERS
+    CLASS
+      NAME "PRINTVECTORS_CLASS_SYMBOL_POINT"
+      EXPRESSION (length('[externalgraphic]') > 0)
+      LABEL
+        ANGLE [angle]
+        SIZE 10
+        COLOR [fontcolor]
+        OFFSET 0 0
+        POSITION UC
+        SHADOWSIZE 1 1
+      END # LABEL
+      STYLE
+        ANGLE [rotation]
+        COLOR [fillcolor]
+        OPACITY [strokeopacity]
+        OUTLINECOLOR [strokecolor]
+        SIZE 12
+        SYMBOL [externalgraphic]
+      END # STYLE
+    END # CLASS
+    CLASS
+      NAME "PRINTVECTORS_CLASS_POINT"
+      EXPRESSION (length('[graphicname]') > 0)
+      LABEL
+        ANGLE [angle]
+        SIZE 10
+        COLOR [fontcolor]
+        OFFSET 0 0
+        POSITION UC
+        SHADOWSIZE 1 1
+      END # LABEL
+      STYLE
+        ANGLE [rotation]
+        COLOR [fillcolor]
+        OPACITY [strokeopacity]
+        OUTLINECOLOR [strokecolor]
+        SIZE [pointradius]
+        SYMBOL [graphicname]
+      END # STYLE
+    END # CLASS
+  END # LAYER
+
+  LAYER
+    COMPOSITE
+    END # COMPOSITE
+    #CONNECTION
+    CONNECTIONTYPE POSTGIS
+    #DATA
+    GROUP "printvectors"
+    LABELITEM "label"
+    NAME "printvectors_MULTIPOINT"
+    #PROCESSING
+    #PROJECTION
+    #END # PROJECTION
+    STATUS ON
+    TILEITEM "location"
+    TYPE POINT
+    UNITS METERS
+    CLASS
+      NAME "PRINTVECTORS_CLASS_SYMBOL_POINT"
+      EXPRESSION (length('[externalgraphic]') > 0)
+      LABEL
+        ANGLE [angle]
+        SIZE 10
+        COLOR [fontcolor]
+        OFFSET 0 0
+        POSITION UC
+        SHADOWSIZE 1 1
+      END # LABEL
+      STYLE
+        ANGLE [rotation]
+        COLOR [fillcolor]
+        OPACITY [strokeopacity]
+        OUTLINECOLOR [strokecolor]
+        SIZE 12
+        SYMBOL [externalgraphic]
+      END # STYLE
+    END # CLASS
+    CLASS
+      NAME "PRINTVECTORS_CLASS_POINT"
+      EXPRESSION (length('[graphicname]') > 0)
+      LABEL
+        ANGLE [angle]
+        SIZE 10
+        COLOR [fontcolor]
+        OFFSET 0 0
+        POSITION UC
+        SHADOWSIZE 1 1
+      END # LABEL
+      STYLE
+        ANGLE [rotation]
+        COLOR [fillcolor]
+        OPACITY [strokeopacity]
+        OUTLINECOLOR [strokecolor]
+        SIZE [pointradius]
+        SYMBOL [graphicname]
+      END # STYLE
+    END # CLASS
+  END # LAYER
+
+  LAYER
+    COMPOSITE
+    END # COMPOSITE
+    #CONNECTION
+    CONNECTIONTYPE POSTGIS
+    #DATA
+    GROUP "printvectors"
+    LABELITEM "label"
+    NAME "printvectors_LINESTRING"
+    #PROCESSING
+    #PROJECTION
+    #END # PROJECTION
+    STATUS ON
+    TILEITEM "location"
+    TYPE LINE
+    UNITS METERS
+    CLASS
+      NAME "PRINTVECTORS_CLASS_dot_LINESTRING"
+      EXPRESSION ('[strokedashstyle]' = 'dot')
+      LABEL
+        ANGLE [angle]
+        SIZE 10
+        COLOR [fontcolor]
+        OFFSET 0 6
+        POSITION UC
+        SHADOWSIZE 1 1
+      END # LABEL
+      STYLE
+        COLOR [strokecolor]
+        OPACITY [strokeopacity]
+        PATTERN
+         1.00 3.00
+        END # PATTERN
+        WIDTH [strokewidth]
+      END # STYLE
+    END # CLASS
+    CLASS
+      NAME "PRINTVECTORS_CLASS_dash_LINESTRING"
+      EXPRESSION ('[strokedashstyle]' = 'dash')
+      LABEL
+        ANGLE [angle]
+        SIZE 10
+        COLOR [fontcolor]
+        OFFSET 0 0
+        POSITION UC
+        SHADOWSIZE 1 1
+      END # LABEL
+      STYLE
+        COLOR [strokecolor]
+        OPACITY [strokeopacity]
+        PATTERN
+         3.00 3.00
+        END # PATTERN
+        WIDTH [strokewidth]
+      END # STYLE
+    END # CLASS
+    CLASS
+      NAME "PRINTVECTORS_CLASS_dashdot_LINESTRING"
+      EXPRESSION ('[strokedashstyle]' = 'dashdot')
+      LABEL
+        ANGLE [angle]
+        SIZE 10
+        COLOR [fontcolor]
+        OFFSET 0 0
+        POSITION UC
+        SHADOWSIZE 1 1
+      END # LABEL
+      STYLE
+        COLOR [strokecolor]
+        OPACITY [strokeopacity]
+        PATTERN
+         3.00 3.00 1.00 3.00
+        END # PATTERN
+        WIDTH [strokewidth]
+      END # STYLE
+    END # CLASS
+    CLASS
+      NAME "PRINTVECTORS_CLASS_longdash_LINESTRING"
+      EXPRESSION ('[strokedashstyle]' = 'longdash')
+      LABEL
+        ANGLE [angle]
+        SIZE 10
+        COLOR [fontcolor]
+        OFFSET 0 0
+        POSITION UC
+        SHADOWSIZE 1 1
+      END # LABEL
+      STYLE
+        COLOR [strokecolor]
+        OPACITY [strokeopacity]
+        PATTERN
+         5.00 3.00
+        END # PATTERN
+        WIDTH [strokewidth]
+      END # STYLE
+    END # CLASS
+    CLASS
+      NAME "PRINTVECTORS_CLASS_longdashdot_LINESTRING"
+      EXPRESSION ('[strokedashstyle]' = 'longdashdot')
+      LABEL
+        ANGLE [angle]
+        SIZE 10
+        COLOR [fontcolor]
+        OFFSET 0 0
+        POSITION UC
+        SHADOWSIZE 1 1
+      END # LABEL
+      STYLE
+        COLOR [strokecolor]
+        OPACITY [strokeopacity]
+        PATTERN
+         5.00 3.00 1.00 3.00
+        END # PATTERN
+        WIDTH [strokewidth]
+      END # STYLE
+    END # CLASS
+    CLASS
+      NAME "PRINTVECTORS_CLASS_LINESTRING"
+      LABEL
+        ANGLE [angle]
+        SIZE 10
+        COLOR [fontcolor]
+        OFFSET 0 0
+        POSITION UC
+        SHADOWSIZE 1 1
+      END # LABEL
+      STYLE
+        COLOR [strokecolor]
+        OPACITY [strokeopacity]
+        WIDTH [strokewidth]
+      END # STYLE
+    END # CLASS
+  END # LAYER
+
+  LAYER
+    COMPOSITE
+    END # COMPOSITE
+    #CONNECTION
+    CONNECTIONTYPE POSTGIS
+    #DATA
+    GROUP "printvectors"
+    LABELITEM "label"
+    NAME "printvectors_MULTILINESTRING"
+    #PROCESSING
+    #PROJECTION
+    #END # PROJECTION
+    STATUS ON
+    TILEITEM "location"
+    TYPE LINE
+    UNITS METERS
+    CLASS
+      NAME "PRINTVECTORS_CLASS_dot_LINESTRING"
+      EXPRESSION ('[strokedashstyle]' = 'dot')
+      LABEL
+        ANGLE [angle]
+        SIZE 10
+        COLOR [fontcolor]
+        OFFSET 0 6
+        POSITION UC
+        SHADOWSIZE 1 1
+      END # LABEL
+      STYLE
+        COLOR [strokecolor]
+        OPACITY [strokeopacity]
+        PATTERN
+         1.00 3.00
+        END # PATTERN
+        WIDTH [strokewidth]
+      END # STYLE
+    END # CLASS
+    CLASS
+      NAME "PRINTVECTORS_CLASS_dash_LINESTRING"
+      EXPRESSION ('[strokedashstyle]' = 'dash')
+      LABEL
+        ANGLE [angle]
+        SIZE 10
+        COLOR [fontcolor]
+        OFFSET 0 0
+        POSITION UC
+        SHADOWSIZE 1 1
+      END # LABEL
+      STYLE
+        COLOR [strokecolor]
+        OPACITY [strokeopacity]
+        PATTERN
+         3.00 3.00
+        END # PATTERN
+        WIDTH [strokewidth]
+      END # STYLE
+    END # CLASS
+    CLASS
+      NAME "PRINTVECTORS_CLASS_dashdot_LINESTRING"
+      EXPRESSION ('[strokedashstyle]' = 'dashdot')
+      LABEL
+        ANGLE [angle]
+        SIZE 10
+        COLOR [fontcolor]
+        OFFSET 0 0
+        POSITION UC
+        SHADOWSIZE 1 1
+      END # LABEL
+      STYLE
+        COLOR [strokecolor]
+        OPACITY [strokeopacity]
+        PATTERN
+         3.00 3.00 1.00 3.00
+        END # PATTERN
+        WIDTH [strokewidth]
+      END # STYLE
+    END # CLASS
+    CLASS
+      NAME "PRINTVECTORS_CLASS_longdash_LINESTRING"
+      EXPRESSION ('[strokedashstyle]' = 'longdash')
+      LABEL
+        ANGLE [angle]
+        SIZE 10
+        COLOR [fontcolor]
+        OFFSET 0 0
+        POSITION UC
+        SHADOWSIZE 1 1
+      END # LABEL
+      STYLE
+        COLOR [strokecolor]
+        OPACITY [strokeopacity]
+        PATTERN
+         5.00 3.00
+        END # PATTERN
+        WIDTH [strokewidth]
+      END # STYLE
+    END # CLASS
+    CLASS
+      NAME "PRINTVECTORS_CLASS_longdashdot_LINESTRING"
+      EXPRESSION ('[strokedashstyle]' = 'longdashdot')
+      LABEL
+        ANGLE [angle]
+        SIZE 10
+        COLOR [fontcolor]
+        OFFSET 0 0
+        POSITION UC
+        SHADOWSIZE 1 1
+      END # LABEL
+      STYLE
+        COLOR [strokecolor]
+        OPACITY [strokeopacity]
+        PATTERN
+         5.00 3.00 1.00 3.00
+        END # PATTERN
+        WIDTH [strokewidth]
+      END # STYLE
+    END # CLASS
+    CLASS
+      NAME "PRINTVECTORS_CLASS_LINESTRING"
+      LABEL
+        ANGLE [angle]
+        SIZE 10
+        COLOR [fontcolor]
+        OFFSET 0 0
+        POSITION UC
+        SHADOWSIZE 1 1
+      END # LABEL
+      STYLE
+        COLOR [strokecolor]
+        OPACITY [strokeopacity]
+        WIDTH [strokewidth]
+      END # STYLE
+    END # CLASS
+  END # LAYER
+
+  LAYER
+    COMPOSITE
+    END # COMPOSITE
+    #CONNECTION
+    CONNECTIONTYPE POSTGIS
+    #DATA
+    GROUP "printvectors"
+    LABELITEM "label"
+    NAME "printvectors_POLYGON"
+    #PROCESSING
+    #PROJECTION
+    #END # PROJECTION
+    STATUS ON
+    TILEITEM "location"
+    TYPE POLYGON
+    UNITS METERS
+    CLASS
+      NAME "PRINTVECTORS_CLASS_POLYGON"
+      LABEL
+        ANGLE [angle]
+        SIZE 10
+        COLOR [fontcolor]
+        OFFSET 0 0
+        POSITION UC
+        SHADOWSIZE 1 1
+      END # LABEL
+      STYLE
+        COLOR [fillcolor]
+        OPACITY [fillopacity]
+      END # STYLE
+      STYLE
+        OPACITY [strokeopacity]
+        OUTLINECOLOR [strokecolor]
+      END # STYLE
+    END # CLASS
+  END # LAYER
+
+  LAYER
+    COMPOSITE
+    END # COMPOSITE
+    #CONNECTION
+    CONNECTIONTYPE POSTGIS
+    #DATA
+    GROUP "printvectors"
+    LABELITEM "label"
+    NAME "printvectors_MULTIPOLYGON"
+    #PROCESSING
+    #PROJECTION
+    #END # PROJECTION
+    STATUS ON
+    TILEITEM "location"
+    TYPE POLYGON
+    UNITS METERS
+    CLASS
+      NAME "PRINTVECTORS_CLASS_POLYGON"
+      LABEL
+        ANGLE [angle]
+        SIZE 10
+        COLOR [fontcolor]
+        OFFSET 0 0
+        POSITION UC
+        SHADOWSIZE 1 1
+      END # LABEL
+      STYLE
+        COLOR [fillcolor]
+        OPACITY [fillopacity]
+      END # STYLE
+      STYLE
+        OPACITY [strokeopacity]
+        OUTLINECOLOR [strokecolor]
+      END # STYLE
+    END # CLASS
+  END # LAYER
+
+END # MAP

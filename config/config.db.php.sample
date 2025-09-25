@@ -10,6 +10,30 @@ define('DB_PORT', '5432');
 define('DB_USER', 'MY_DB_ADMIN_USER'); //Superutente
 define('DB_PWD', 'MY_DB_ADMIN_PASSWORD');
 
+// **** GeoNote/Redline DB config
+// **** Se omessa viene usata la connessione al DB standard
+/*
+define('REDLINE_DB', 'MY_REDLINE_DB');
+define('REDLINE_SCHEMA', 'MY_REDLINE_SCHEMA);
+define('REDLINE_TABLE', 'MY_REDLINE_TABLE');
+define('REDLINE_HOST', 'MY_REDLINE_HOST');
+define('REDLINE_PORT', 'MY_REDLINE_PORT);
+define('REDLINE_USER', 'MY_REDLINE_USER'); // Read/Write access
+define('REDLINE_PWD', 'MY_REDLINE__PWD');
+*/
+*
+// **** Print Vectors config
+// **** Se omessa viene usata la connessione al DB standard
+/*
+define('PRINT_VECTORS_DB', 'MY_PRINT_VECTORS_DB');
+define('PRINT_VECTORS_SCHEMA', 'MY_PRINT_VECTORS_SCHEMA');
+define('PRINT_VECTORS_TABLE', 'MY_PRINT_VECTORS_TABLE');
+define('PRINT_VECTORS_HOST', 'MY_PRINT_VECTORS_HOST');
+define('PRINT_VECTORS_PORT', 'MY_PRINT_VECTORS_PORT');
+define('PRINT_VECTORS_USER', 'MY_PRINT_VECTORS_USER'); // Read/Write access
+define('PRINT_VECTORS_PWD', 'MY_PRINT_VECTORS_PWD');
+*/
+
 //Utente scritto sul file .map
 define('MAP_USER','MY_DB_MAPSERVER_USER');
 define('MAP_PWD','MY_DB_MAPSERVER_PASSWORD');

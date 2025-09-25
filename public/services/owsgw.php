@@ -13,14 +13,14 @@ if(($_SERVER['REQUEST_METHOD'] == 'POST' && strpos($_SERVER['REQUEST_URI'],'GC_E
 // ADESSO NON SERVE PIU SECONDO ME!
 if (!empty($_REQUEST['gcRequestType']) && $_SERVER['REQUEST_METHOD'] == 'POST' && $_REQUEST['gcRequestType'] == 'OLWFS') {
 	$url = MAPSERVER_URL.'map='.ROOT_PATH.'map/'.$_REQUEST['PROJECT'].'/'.$_REQUEST['MAP'].'.map';
-	
+
 	$fileContent = file_get_contents('php://input');
 	file_put_contents('/tmp/postrequest.xml', $fileContent);
-	
+
 	$curl = curl_init();
 	curl_setopt($curl, CURLOPT_URL, $url);
 	curl_setopt($curl, CURLOPT_POST, true);
-	
+
 	curl_setopt($curl, CURLOPT_POSTFIELDS, array('file' => '@/tmp/postrequest.xml'));
 	$return = curl_exec($curl);
 	if(!$return) var_export(curl_error($curl));
@@ -32,7 +32,7 @@ if(defined('DEBUG') && DEBUG == true) {
 	error_reporting(E_ALL ^ E_NOTICE);
 }
 
-$objRequest = ms_newOwsrequestObj();
+$objRequest = new OWSRequest();
 foreach ($_REQUEST as $k => $v) if (is_string($v)) $objRequest->setParameter($k, stripslashes($v));
 
 //OGGETTO MAP MAPSCRIPT
@@ -50,7 +50,7 @@ if(!empty($showTmpMapfile)) {
 	$mapfile = "tmp.".$mapfile;
 }
 
-$oMap = ms_newMapobj($mapPath.$mapfile.".map");
+$oMap = new gc_mapObj($mapPath.$mapfile.".map");
 
 $resolution = $objRequest->getvaluebyname('resolution');
 if(!empty($resolution) && $resolution != 72) {
@@ -72,10 +72,10 @@ if(!empty($_REQUEST['SLD_BODY']) && substr($_REQUEST['SLD_BODY'],-4)=='.xml'){
     curl_setopt($ch, CURLOPT_HEADER, 0);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_BINARYTRANSFER, 1);
-    curl_setopt($ch ,CURLOPT_TIMEOUT, 10); 
+    curl_setopt($ch ,CURLOPT_TIMEOUT, 10);
     $sldContent = curl_exec($ch);
     curl_close($ch);
-    
+
 	if($sldContent !== false) {
         $objRequest->setParameter('SLD_BODY', $sldContent);
         $oMap->applySLD($sldContent); // for getlegendgraphic
@@ -83,7 +83,7 @@ if(!empty($_REQUEST['SLD_BODY']) && substr($_REQUEST['SLD_BODY'],-4)=='.xml'){
 }
 
 
-//CAMBIA EPSG CON QUELLO CON PARAMETRI DI CORREZIONE SE ESISTE 
+//CAMBIA EPSG CON QUELLO CON PARAMETRI DI CORREZIONE SE ESISTE
 if($objRequest->getvaluebyname('srsname')) $objRequest->setParameter('srs', $objRequest->getvaluebyname('srsname'));// QUANTUM GIS PASSAVA SRSNAME... DA VERIFICARE
 if($objRequest->getvaluebyname('srs') && $oMap->getMetaData($objRequest->getvaluebyname('srs'))) $objRequest->setParameter("srs", $oMap->getMetaData($objRequest->getvaluebyname('srs')));
 if($objRequest->getvaluebyname('srs')) $oMap->setProjection($projString="+init=".strtolower($objRequest->getvaluebyname('srs')));
@@ -212,16 +212,16 @@ if(!isset($_SESSION['GISCLIENT_USER_LAYER']) && !empty($layersParameter) && empt
 
 if(!empty($layersParameter)) {
 	$layersArray = getRequestedLayers($layersParameter);
-	
+
 	// stabilisco i layer da rimuovere (nascosti, privati e con filtri obbligatori non definiti) e applico i filtri
 	$layersToRemove = array();
 	$layersToInclude = array();
 	foreach($layersArray as $layer) {
-	
+
 		//layer aggiunto x highlight
 		$highlight = $objRequest->getvaluebyname('highlight');
 		if(strtoupper($objRequest->getvaluebyname('request')) == 'GETMAP' && !empty($highlight)) $layer->set('sizeunits',MS_PIXELS);
-	
+
 		// layer nascosto
 		$hideLayer = $layer->getMetaData("gc_hide_layer");
 		if(strtoupper($objRequest->getvaluebyname('request')) == 'GETMAP' && !empty($hideLayer)) {
@@ -262,7 +262,7 @@ if(!empty($layersParameter)) {
 				$layer->setFilter($filter);
 			}
 		}
-		
+
 		if(!empty($_SESSION['GC_LAYER_FILTERS'])) {
             if(!empty($_SESSION['GC_LAYER_FILTERS'][$layer->name])) {
                 $filter = $layer->getFilterString();
@@ -275,7 +275,7 @@ if(!empty($layersParameter)) {
                 $layer->setFilter($filter);
             }
         }
-        
+
         if($objRequest->getValueByName('format') == 'kml') {
             $layer->set('labelmaxscaledenom', 999999999999);
             $layer->set('labelminscaledenom', 1);
@@ -287,7 +287,7 @@ if(!empty($layersParameter)) {
                 }
             }
         }
-		
+
 		if(!in_array($layer->name, $layersToRemove)) array_push($layersToInclude, $layer->name);
 	}
 	// rimuovo i layer che l'utente non può visualizzare
@@ -295,19 +295,19 @@ if(!empty($layersParameter)) {
 		$layer = $oMap->getLayerByName($layerName);
 		$oMap->removeLayer($layer->index);
 	}
-	// aggiorno il parametro layers con i soli layers che l'utente può vedere 
-	$objRequest->setParameter($parameterName, implode(",",$layersToInclude));		
+	// aggiorno il parametro layers con i soli layers che l'utente può vedere
+	$objRequest->setParameter($parameterName, implode(",",$layersToInclude));
 }
 session_write_close();
 
 // Cache part 1
 $owsCacheTTL = defined('OWS_CACHE_TTL') ? OWS_CACHE_TTL : 0;
 $owsCacheTTLOpen = defined('OWS_CACHE_TTL_OPEN') ? OWS_CACHE_TTL_OPEN : 0;
-if ((isset($_REQUEST['REQUEST']) && 
-     strtolower($_REQUEST['REQUEST']) == 'getmap') || 
-	(isset($_REQUEST['request']) && 
+if ((isset($_REQUEST['REQUEST']) &&
+     strtolower($_REQUEST['REQUEST']) == 'getmap') ||
+	(isset($_REQUEST['request']) &&
      strtolower($_REQUEST['request']) == 'getmap')) {
-	
+
 	if ($owsCacheTTL > 0 && isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) && strtotime($_SERVER["HTTP_IF_MODIFIED_SINCE"]) < time() - $owsCacheTTL) {
 		header('HTTP/1.1 304 Not Modified');
 		die(); // Dont' return image
@@ -325,19 +325,19 @@ if (substr($sapi_type, 0, 3) != 'cgi') {
 }
 
 
-/* Enable output buffer */ 
-ms_ioinstallstdouttobuffer(); 
+/* Enable output buffer */
+mapscript::msIO_installStdoutToBuffer();
 
-/* Eexecute request */ 
+/* Eexecute request */
 //TODO VERIFICARE PERCHÈ SENZA @ DA ERRORE
 @$oMap->owsdispatch($objRequest);
 
 
 
-$contenttype = ms_iostripstdoutbuffercontenttype(); 
-$ctt = explode("/",$contenttype); 
+$contenttype = mapscript::msIO_stripStdoutBufferContentType();
+$ctt = explode("/",$contenttype);
 
-/* Send response with appropriate header */ 
+/* Send response with appropriate header */
 if ($ctt[0] == 'image') {
 
 	$hasDynamicLayer = false;
@@ -353,8 +353,8 @@ if ($ctt[0] == 'image') {
 		}
     }
 
-	header('Content-type: image/'. $ctt[1]); 
-    
+	header('Content-type: image/'. $ctt[1]);
+
     // Cache part 2
 	if (!$hasDynamicLayer && $cacheExpireTimeout > 0 && $cacheExpireTimeout > time()) {
 		$cacheTime = gmdate("D, d M Y H:i:s", time() + $owsCacheTTLOpen) . " GMT";
@@ -376,19 +376,19 @@ if ($ctt[0] == 'image') {
 		header("Last-Modified: {$serverTime}");
 		header("Expires: {$cacheTime}");
 	}
-    
-	ms_iogetStdoutBufferBytes(); 
+
+	echo mapscript::msIO_getStdoutBufferBytes();
 } else if($ctt[1] == 'vnd.google-earth.kml+xml') {
     header("content-type: application/vnd.google-earth.kml+xml");
     header('Content-Disposition: attachment; filename="export.kml"');
-    ms_iogetStdoutBufferBytes(); 
+    echo mapscript::msIO_getStdoutBufferBytes();
 } else {
     //vnd.google-earth.kml+xml
-	header("Content-Type: application/xml"); 
-	ms_iogetStdoutBufferBytes(); 
-} 
+	header("Content-Type: application/xml");
+	echo mapscript::msIO_getStdoutBufferBytes(); 
+}
 
-ms_ioresethandlers();
+mapscript::msIO_resetHandlers();
 
 
 

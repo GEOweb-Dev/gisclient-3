@@ -21,7 +21,7 @@
 	var $timeOut;
 	var $charsetOutput = CHAR_SET;
 	
-	function ParseXml() {
+	function __construct() {
 
 	}
 	

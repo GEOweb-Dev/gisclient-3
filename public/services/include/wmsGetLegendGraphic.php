@@ -45,7 +45,6 @@ function gcGetLegendGraphic(&$objRequest, &$oMap, $request, $savePath = null) {
     	$iconH=isset($request["ICONH"])?$request["ICONH"]:LEGEND_ICON_H;
     	$totWidth = isset($request['WIDTH'])?$request['WIDTH']:250;
 
-
     	$legend=false;
     	if(isset($request["RULE"])){
     		//SE RULE E' FORMATA DA NOME_LIVELLO:NOME_CLASSE PRENDO LA SOLA CLASSE ALTRIMENTI CREO UNA LEGENDA CON TUTTE LE ICONE DELLE CLASSI DEL LIVELLO
@@ -115,14 +114,13 @@ function gcGetLegendGraphic(&$objRequest, &$oMap, $request, $savePath = null) {
                 curl_setopt_array($ch, $options);
                 $result = curl_exec($ch);
                 if($result === false) {
-    				throw new RunTimeException("Could not call $urlWmsRequest: " . curl_error($ch));
+    				//throw new RunTimeException("Could not call $urlWmsRequest: " . curl_error($ch));
                 } else if($result) {
     				array_push($iconsArray, $result);
                 }
                 curl_close($ch);
                 continue;
             }
-
             $oLayer->set('sizeunits',MS_PIXELS);
             if(!$ruleLayerName || $ruleLayerName == $oLayer->name){
                 $numCls = $oLayer->numclasses;
@@ -151,18 +149,18 @@ function gcGetLegendGraphic(&$objRequest, &$oMap, $request, $savePath = null) {
                         //SE E' UNA CLASSE CON SIMBOLO TTF AGGIUNGO IL SIMBOLO
                         if(strlen($char)==3){//USARE REGEXP, non � detto che questa stringa sia lunga 3 !!!!
                             $lbl=$oClass->label;
-                            $idSymbol = ms_newSymbolObj($oMap, "v");
+                            $idSymbol = new gc_symbolObj($oMap, "v");
                             $oSymbol = $oMap->getSymbolObjectById($idSymbol);
                             $oSymbol->set('type',MS_SYMBOL_TRUETYPE);
                             $oSymbol->set('font',$lbl->font);
                             $oSymbol->set('character',substr($char,1,1));
                             $oSymbol->set('antialias',1);
 
-                            $oStyle=ms_newStyleObj($oClass);
+                            $oStyle= new gc_styleObj($oClass);
                             $oStyle->set("size",$iconW/2);//DA VERERE !!!!!
                             //$oStyle->set("offsetx",-25);
                             //$oStyle->set("offsety",25);
-                            $oStyle->set('symbolname','v');
+                            $oStyle->setSymbolByName($oMap,'v');
                             $oStyle->color->setRGB($lbl->color->red,$lbl->color->green,$lbl->color->blue);
                         }
 
@@ -179,7 +177,7 @@ function gcGetLegendGraphic(&$objRequest, &$oMap, $request, $savePath = null) {
                             }
                             header("Content-type: image/png");
                             $icoImg->saveImage('');
-    						if (ms_GetVersionInt() < 60000) {
+    						if (mapscript::msGetVersionInt() < 60000) {
     							$icoImg->free();
     						}
                             die();
@@ -207,7 +205,7 @@ function gcGetLegendGraphic(&$objRequest, &$oMap, $request, $savePath = null) {
     							$oStyle->set('maxsize', $iconH);
     						}
     					}
-                        ms_ioinstallstdouttobuffer();
+                        mapscript::msIO_installStdoutToBuffer();
                         $objRequest->setParameter('LAYER', $oLayer->name);
                         $objRequest->setParameter('WIDTH', $totWidth);
                         if(!empty($request['SCALE'])) {
@@ -215,11 +213,11 @@ function gcGetLegendGraphic(&$objRequest, &$oMap, $request, $savePath = null) {
                         }
 
                         $oMap->owsdispatch($objRequest);
-                        $contenttype = ms_iostripstdoutbuffercontenttype();
+                        $contenttype = mapscript::msIO_stripStdoutBufferContentType();
 
                         ob_start();
-                        ms_iogetStdoutBufferBytes();
-                        ms_ioresethandlers();
+                        echo mapscript::msIO_getStdoutBufferBytes();
+                        mapscript::msIO_resetHandlers();
                         $imageContent = ob_get_contents();
                         ob_end_clean();
     					// FIXME: ha senso aggiungere anche se il centent è vuoto?
@@ -253,7 +251,7 @@ function gcGetLegendGraphic(&$objRequest, &$oMap, $request, $savePath = null) {
                         $icoImg->saveImage('');
                         $imageContent = ob_get_contents();
                         ob_end_clean();
-    					if (ms_GetVersionInt() < 60000) {
+    					if (mapscript::msGetVersionInt() < 60000) {
                             $icoImg->free();
                         }
                         array_push($iconsArray, $imageContent);

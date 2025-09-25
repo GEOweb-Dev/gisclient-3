@@ -327,6 +327,7 @@ class GCAuthor {
     public static function compileMapfile($project, $mapset, $layers = "", $zoomLvls = 20, $publicTarget = false) {
 	  GCUtils::deleteOldFiles(GC_WEB_TMP_DIR, $project.'_'.$mapset.'_errors_*.log');
       $fileName = ROOT_PATH."map/".$project."/".($publicTarget ? "" : "tmp.").$mapset.".map";
+	  $msVersion = substr(mapscript::msGetVersionInt(), 0, 1);
       if(file_exists($fileName)) {
         $contents = file_get_contents($fileName);
         $pattern = preg_quote("EXTENT", '/');
@@ -338,7 +339,12 @@ class GCAuthor {
 			$layerOpt = '-l "' . $layers . '"';
 		}
         for($index = 0; $index<$zoomLvls; $index++) {
-          $command = "shp2img -m ".$fileName." -o /tmp/test.png -all_debug 5 $layerOpt -e ".implode(" ", $choordsArray);
+		  if ($msVersion < 8) {
+			  $command = "shp2img -m ".$fileName." -o /tmp/test.png -all_debug 5 $layerOpt -e ".implode(" ", $choordsArray);
+		  }
+          else {
+			  $command = "map2img -m ".$fileName." -o /tmp/test.png -all_debug 5 $layerOpt -e ".implode(" ", $choordsArray);
+		  }
 		  $logFile = GCApp::getUniqueRandomTmpFilename(GC_WEB_TMP_DIR, $project.'_'.$mapset.'_errors_', 'log');
 		  $logFile = GC_WEB_TMP_DIR . '/' . $logFile;
           system($command.">$logFile 2>&1", $retVal);
@@ -377,8 +383,8 @@ class GCAuthor {
             }
         }
 		array_map('unlink', glob("$legendDir/*"));
-		$oMap = @ms_newMapobj(ROOT_PATH.'map/'.$project.'/'.$mapsetFileName);
-		$objRequest = ms_newOwsrequestObj();
+		$oMap = @new gc_mapObj(ROOT_PATH.'map/'.$project.'/'.$mapsetFileName);
+		$objRequest = new OWSRequest();
 		$objRequest->addParameter('REQUEST', 'getlegendgraphic');
 		$objRequest->addParameter('SERVICE', 'wms');
 		$objRequest->addParameter('FORMAT', 'image/png');
@@ -391,7 +397,6 @@ class GCAuthor {
 			'WIDTH'=>'500'
 		);
 		if (defined('GC_SESSION_NAME') && isset($_REQUEST['GC_SESSION_ID']) && $_REQUEST['GC_SESSION_ID'] == session_id()) {
-
 			$paramsRequest['GC_SESSION_ID'] = session_id();
 		}
 		$layerGroups = $oMap->getAllGroupNames();
@@ -433,13 +438,13 @@ class GCAuthor {
 					$oLegendImg->saveImage($legendDir . '/' . $oLayer->name . '-' . $j . '.png');
 				} catch (Exception $e) {
 					$errorStr = "Error generating legend image for layer " . $oLayer->name . ", class " . $oClass->name . ". Details: " . $e->getMessage();
-					$error = ms_GetErrorObj();
+					$error = mapscript::msGetErrorObj();
 					while($error && $error->code != MS_NOERR)
 					{
 					  $errorStr .= " Error in ". $error->routine . ":" . $error->message;
 					  $error = $error->next();
 					}
-					ms_ResetErrorList();
+					mapscript::msResetErrorList();
 					GCError::register($errorStr);
 				}
 			}
@@ -659,7 +664,7 @@ class GCAuthor {
 				and mapset_name=?";
 		$stmt = $db->prepare($sql);
 		$stmt->execute(array($mapset));
-		$layergroups= $stmt->fetchAll(PDO::FETCH_COLUMN, 'layergroup_name');
+		$layergroups= $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
 		return $layergroups;
 	}
 

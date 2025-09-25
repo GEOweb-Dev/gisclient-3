@@ -1,19 +1,19 @@
 <?php
 
-	$buffer = ms_iogetstdoutbufferstring();
-	
-	include_once "../admin/lib/xml2array.php";	
-	//$array = xml2array(file_get_contents('php://input', 'r'));	
+	$buffer = mapscript::msIO_getStdoutBufferString();
+
+	include_once "../admin/lib/xml2array.php";
+	//$array = xml2array(file_get_contents('php://input', 'r'));
 	$array = xml2array($buffer);
 	print('<pre>');
 	print_r($array);exit;
-	
+
 	echo $buffer;
-	ms_ioresethandlers();
-	
-	
-	
-	/*	
+	mapscript::msIO_resetHandlers();
+
+
+
+	/*
 	//TODO RESTITUZIONE DEI SOLI RISULTATI CON O SENZA GEOMETRIE IN JSON
 	if(strtolower($_REQUEST["SERVICE"])=="wfs" && strtolower($_REQUEST["REQUEST"])=="getfeatureXXX"){
 
@@ -27,14 +27,14 @@
 		$msAttributeText = FALSE;
 		$msObject = NULL;
 		$msFid = NULL;
-	
-	include_once "../admin/lib/xml2array.php";	
-	//$array = xml2array(file_get_contents('php://input', 'r'));	
+
+	include_once "../admin/lib/xml2array.php";
+	//$array = xml2array(file_get_contents('php://input', 'r'));
 	$array = xml2array($sld_body);
 	print('<pre>');
 	print_r($array);exit;
-		
-		
+
+
 		while ($foo->read()) {
 			switch ($foo->nodeType) {
 				case XMLREADER::ELEMENT:
@@ -47,7 +47,7 @@
 						$msFid = $foo->getAttribute('gc_objid');
 						if (!!empty($msObject[$msObjectName]))
 							$msObject[$msObjectName] = array();
-						
+
 						$msObject[$msObjectName][$msFid] = array();
 						$msAttributeText = FALSE;
 					} else if ($foo->prefix == 'ms' && $in_featureMember && $msObjectInit) {
@@ -87,12 +87,12 @@
 
 		echo json_encode($msObject);
 		die();
-	
+
 	}
 
 */
-	
-	
-	
+
+
+
 
 ?>

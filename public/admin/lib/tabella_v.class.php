@@ -36,7 +36,7 @@ function get_controllo($label,$tipo,$w,$campo,$mode,$action='',$frozen=0){
 		$class="class=\"errors\"";
 		$help="<image src=\"images/small_help.gif\" onclick=\"alert('$err')\" />";
 	}
-	
+
 	/*MODIFICA LOCK STATI SE IL CAMPO E' FROZEN AGGIUNGO disabled*/
 	if ($frozen) $disabilitato="disabled";
 	else
@@ -468,7 +468,7 @@ function elenco_selectdb($tabella,$selezionato,$filtro){
 	if (!isset($this->db)) $this->connettidb();
 	$sql=' id,opzione FROM '.$this->schemadb.'.'.$tabella;
 	if (is_array($filtro)){
-
+		$arrfiltro = array();
 		for($i=0;$i<count($filtro);$i++){
 			if (isset($this->array_dati[$this->curr_record][$filtro[$i]]) && $this->array_dati[$this->curr_record][$filtro[$i]]){
 				$value=$this->array_dati[$this->curr_record][$filtro[$i]];

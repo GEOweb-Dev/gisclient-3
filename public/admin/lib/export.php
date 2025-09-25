@@ -226,7 +226,7 @@ function _getListValue($level,$val,$db=null){
 	else
 	{
 
-		while(trim($pk["parent"][$level])){
+		while(is_string($pk["parent"][$level]) && trim($pk["parent"][$level])){
 			$table=$pk["table"][$level];
 			if(count($pk['pkey'][$level])>1){
 
@@ -286,7 +286,10 @@ function _export($fileName="export.sql",$currentLevel,$projName,$structure,$star
 		$startName=_getFieldName($currentLevel);
 	}
 	$child=_getChild($currentLevel,1);
-	$parentKey=$pkey[$parent];		//CHIAVI PRIMARIE DEL LIVELLO PADRE
+	$parentKey = null;
+	if (!empty($parent)) {
+	    $parentKey=$pkey[$parent];		//CHIAVI PRIMARIE DEL LIVELLO PADRE
+	}
 	if($parentKey && !$start) {										//FILTRO PER RECUPERARE I DATI DEL LIVELLO CORRENTE
 		for($i=0;$i<count($parentKey);$i++) {
             $filter[] = $parentKey[$i].' = :'.$parentKey[$i];
@@ -345,7 +348,7 @@ function _export($fileName="export.sql",$currentLevel,$projName,$structure,$star
 				$values[$key]="@PARENTKEY@";
 				$valutatedKey[$key][$val]=1;
 			}
-			elseif($start && in_array($key,$parentKey)){	//CHIAVE PRIMARIA DEL PARENT (METTO IL VALORE PASSATO NELL'IMPORT)
+			elseif($start && is_array($parentKey) && in_array($key,$parentKey)){	//CHIAVE PRIMARIA DEL PARENT (METTO IL VALORE PASSATO NELL'IMPORT)
 				$values[$key]="@PARENTID@";
 				$valutatedKey[$key][$val]=1;
 			}

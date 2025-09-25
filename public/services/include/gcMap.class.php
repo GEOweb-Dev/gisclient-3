@@ -259,9 +259,9 @@ class gcMap{
 
         // **** Retrieve Layer names/mapserver ID hash
         // Modifica Giraudi per usare l'id al posto del layer name
-        $mapTmp = ms_newMapobj(ROOT_PATH. "/map/" . $this->projectName . "/" . $this->mapsetName . ".map");
+        $mapTmp = new gc_mapObj(ROOT_PATH. "/map/" . $this->projectName . "/" . $this->mapsetName . ".map");
         $layersHash = $mapTmp->getAllLayerNames();
-        $mapTmp->free();
+        //$mapTmp->free();
 
         $this->user->setAuthorizedLayers(array('mapset_name'=>$this->mapsetName));
 
@@ -571,7 +571,7 @@ class gcMap{
 
                         array_push($this->mapLayers[$idx]["nodes"], $node);
 
-                        continue;
+                        break;
                     }
 
 
@@ -639,7 +639,7 @@ class gcMap{
                     $layerParameters = array();
 
                     if (!$mapproxy_url)
-                        continue;
+                        break;
                     $aLayer["url"] = $mapproxy_url . "/service";
                     $layerOptions["owsurl"] = $ows_url . "?PROJECT=" . $this->projectName . "&MAP=" . $mapsetName;
                     $layerOptions["zindex_correction"] = $layerZCorr?$layerZCorr:$themeZCorr;
@@ -744,7 +744,7 @@ class gcMap{
                         $layerParameters["url"] = $row["url"] . "/{Style}/{TileMatrixSet}/{TileMatrix}/{TileCol}/{TileRow}." . $row['outputformat_extension'];
                     } else {
                         if (!$mapproxy_url)
-                            continue;
+                            break;
                         $layerParameters["requestEncoding"] = "REST";
                         $layerParameters["style"] = empty($row["layers"]) ? $layergroupName : $row["layers"];
                         $layerParameters["matrixSet"] = $this->mapsetGRID;
@@ -791,7 +791,7 @@ class gcMap{
                         $layerOptions["layername"] = empty($row["layers"]) ? '' : $row["layers"];
                     } else {
                         if (!$mapproxy_url)
-                            continue;
+                            break;
                         $aLayer["url"] = $mapproxy_url . "/tms/";
                         $layerOptions["serviceVersion"] = defined('GISCLIENT_TMS_VERSION') ? GISCLIENT_TMS_VERSION : "1.0.0";
 
@@ -875,7 +875,7 @@ class gcMap{
 
         if (trim($row['sld']) != '') {
             if (is_null($this->oMap)) {
-                $this->oMap = ms_newMapobj("../../map/{$this->mapsetName}.map");
+                $this->oMap = new gc_mapObj("../../map/{$this->mapsetName}.map");
             }
             if (!array_key_exists($row['sld'], $this->sldContents)) {
                 $ch = curl_init($row['sld']);
