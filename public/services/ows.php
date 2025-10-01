@@ -481,6 +481,8 @@ if (!empty($contenttype) && substr($contenttype, 0, 6) == 'image/') {
 	}
 } else {
 	header("Content-Type: application/xml");
+	echo mapscript::msIO_getStdoutBufferBytes();
+	/*
 	if (strtoupper($objRequest->getvaluebyname('request')) == 'GETCAPABILITIES') {
 		$capabilitiesCacheFile = $projectDirectory.$mapfileBasename."_capabilities.xml";
 		if (file_exists($capabilitiesCacheFile)) {
@@ -496,6 +498,7 @@ if (!empty($contenttype) && substr($contenttype, 0, 6) == 'image/') {
 	else {
 		echo mapscript::msIO_getStdoutBufferBytes();
 	}
+	*/
 }
 
 mapscript::msIO_resetHandlers();
