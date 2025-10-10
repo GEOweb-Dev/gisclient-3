@@ -647,6 +647,9 @@ class gcFeature {
                     $aMeta['gml_' . $field['field_name'] . '_type'] = $gmlType;
             }
         }
+        else {
+            $aMeta["wfs_enable_request"] = "!*";
+        }
 
         if (!empty($this->aFeature['hidden']) && $this->aFeature["hidden"] == 1) {
             $aMeta["gc_hide_layer"] = '1';
