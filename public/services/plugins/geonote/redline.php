@@ -14,7 +14,7 @@ if(!defined('REDLINE_SCHEMA')) define('REDLINE_SCHEMA', 'public');
 if(!defined('REDLINE_FONT')) define('REDLINE_FONT', 'arial');
 if(!defined('POSTGIS_TRANSFORM_GEOMETRY')) define('POSTGIS_TRANSFORM_GEOMETRY', 'Postgis_Transform_Geometry');
 
-$redlineFields = array ('color' => 'varchar', 'label' => 'text', 'attach' => 'text', 'attachsize' => 'text', 'resolution' => 'numeric', 'labelxoff' => 'numeric', 'labelyoff' => 'numeric', 'symbol' => 'varchar', 'radius' => 'numeric', 'strokewidth' => 'numeric', 'dashstyle' => 'varchar', 'fontsize' => 'varchar', 'angle' => 'numeric', 'quote_id' => 'varchar', 'unit' => 'varchar');
+$redlineFields = array ('color' => 'varchar', 'label' => 'text', 'attach' => 'text', 'attachsize' => 'text', 'resolution' => 'numeric', 'labelxoff' => 'numeric', 'labelyoff' => 'numeric', 'symbol' => 'varchar', 'radius' => 'numeric', 'strokewidth' => 'numeric', 'dashstyle' => 'varchar', 'fontsize' => 'varchar', 'angle' => 'numeric', 'quote_id' => 'varchar', 'unit' => 'varchar', 'opacity' => 'numeric');
 
 if ($_REQUEST["REQUEST"] == "attUpload") {
     if(!defined('REDLINE_UPLOAD_DIR') || !defined('REDLINE_UPLOAD_URL')) outputError('Missing upload config values, cannot execute request');
