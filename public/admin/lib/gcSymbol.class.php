@@ -163,6 +163,7 @@ class Symbol{
 		//creo la mappa
 		$legendIconW = LEGEND_ICON_W;
 		$legendIconH = LEGEND_ICON_H;
+		$msVersion = substr(mapscript::msGetVersionInt(), 0, 1);
 		$oMap = $this->oMap;
 		$oMap->setFontSet(ROOT_PATH.'fonts/fonts.list');
 		if (method_exists($oMap->outputformat, 'set')){
@@ -191,7 +192,9 @@ class Symbol{
 			if(!empty($style[$i]['angle']))	$oStyle->set('angle',$style[$i]['angle']);
 			if(isset($style[$i]['color']) && count($style[$i]['color'])==3)	$oStyle->color->setRGB($style[$i]['color'][0],$style[$i]['color'][1],$style[$i]['color'][2]);
 			if(isset($style[$i]['outlinecolor']) && count($style[$i]['outlinecolor'])==3) $oStyle->outlinecolor->setRGB($style[$i]['outlinecolor'][0],$style[$i]['outlinecolor'][1],$style[$i]['outlinecolor'][2]);
-			if(isset($style[$i]['bgcolor']) && count($style[$i]['bgcolor'])==3) $oStyle->backgroundcolor->setRGB($style[$i]['bgcolor'][0],$style[$i]['bgcolor'][1],$style[$i]['bgcolor'][2]);
+			if ($msVersion < 8){
+				if(isset($style[$i]['bgcolor']) && count($style[$i]['bgcolor'])==3) $oStyle->backgroundcolor->setRGB($style[$i]['bgcolor'][0],$style[$i]['bgcolor'][1],$style[$i]['bgcolor'][2]);
+			} 
 			$oStyle->set('width',1);
 			if(!empty($style[$i]['width'])) $oStyle->set('width',$style[$i]['width']);
 			if(!empty($style[$i]['size'])) $oStyle->set('size',$style[$i]['size']);

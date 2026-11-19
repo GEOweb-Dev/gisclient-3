@@ -147,7 +147,7 @@ function gcGetLegendGraphic(&$objRequest, &$oMap, $request, $savePath = null) {
 
                         $char=$oClass->getTextString();
                         //SE E' UNA CLASSE CON SIMBOLO TTF AGGIUNGO IL SIMBOLO
-                        if(strlen($char)==3){//USARE REGEXP, non � detto che questa stringa sia lunga 3 !!!!
+                        if(!empty($char) && strlen($char)==3){//USARE REGEXP, non � detto che questa stringa sia lunga 3 !!!!
                             $lbl=$oClass->label;
                             $idSymbol = new gc_symbolObj($oMap, "v");
                             $oSymbol = $oMap->getSymbolObjectById($idSymbol);
